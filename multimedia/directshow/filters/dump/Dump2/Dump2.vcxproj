@@ -115,7 +115,7 @@
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>..\..\..\BaseClasses\Debug\strmbasd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\..\BaseClasses\x64\Debug\strmbasd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>dump2.def</ModuleDefinitionFile>
       <SubSystem>Windows</SubSystem>
     </Link>
@@ -130,7 +130,7 @@
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>..\..\..\BaseClasses\Release\strmbase.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\..\BaseClasses\x64\Release\strmbase.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>dump2.def</ModuleDefinitionFile>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
