@@ -225,6 +225,10 @@
     <ClInclude Include="wxlist.h" />
     <ClInclude Include="wxutil.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="activex.rcv" />
+    <None Include="activex.ver" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

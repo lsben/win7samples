@@ -219,4 +219,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="activex.rcv">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="activex.ver">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>
