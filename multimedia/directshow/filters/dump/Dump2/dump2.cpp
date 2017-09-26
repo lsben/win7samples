@@ -7,7 +7,6 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
-
 // Summary
 //
 // We are a generic renderer that can be attached to any data stream that
@@ -17,7 +16,6 @@
 // creates a file open dialog automatically when it sees a filter being
 // created that supports the IFileSinkFilter interface.
 //
-//
 // Implementation
 //
 // Pretty straightforward.  We have our own input pin class so that
@@ -25,7 +23,6 @@
 // data into a raw data file (using the Write function). We don't keep
 // the file open when we are stopped, so the flags to the open function
 // ensure that we open a file if already there; otherwise, we create it.
-//
 //
 // Demonstration instructions
 //
@@ -48,9 +45,7 @@
 // graph and dump the filename that you entered when inserting the filter into
 // the graph.  The data supplied to the renderer will be displayed as raw data.
 //
-//
 // Files
-//
 // dump.cpp             Main implementation of the dump renderer
 // dump.def             What APIs the DLL will import and export
 // dump.h               Class definition of the derived renderer
@@ -66,8 +61,6 @@
 // CUnknown             Handle IUnknown for our IFileSinkFilter
 // CPosPassThru         Passes seeking interfaces upstream
 // CCritSec             Helper class that wraps a critical section
-//
-//
 
 #include <windows.h>
 #include <commdlg.h>
@@ -77,9 +70,6 @@
 
 #include "dump2uids.h"
 #include "dump2.h"
-
-
-// Setup data
 
 const AMOVIESETUP_MEDIATYPE sudPinTypes =
 {
@@ -110,32 +100,20 @@ const AMOVIESETUP_FILTER sudDump =
 };
 
 
-//
 //  Object creation stuff
-//
 CFactoryTemplate g_Templates[]= {
     L"Dump2", &CLSID_Dump2, CDump::CreateInstance, NULL, &sudDump
 };
 int g_cTemplates = 1;
-
-
-// Constructor
 
 CDumpFilter::CDumpFilter(CDump *pDump,
                          LPUNKNOWN pUnk,
                          CCritSec *pLock,
                          HRESULT *phr) :
     CBaseFilter(NAME("CDumpFilter"), pUnk, pLock, CLSID_Dump2),
-    m_pDump(pDump)
-{
-}
+    m_pDump(pDump) {}
 
-
-//
-// GetPin
-//
-CBasePin * CDumpFilter::GetPin(int n)
-{
+CBasePin * CDumpFilter::GetPin(int n) {
     if (n == 0) {
         return m_pDump->m_pPin;
     } else {
@@ -143,156 +121,84 @@ CBasePin * CDumpFilter::GetPin(int n)
     }
 }
 
-
-//
-// GetPinCount
-//
-int CDumpFilter::GetPinCount()
-{
+int CDumpFilter::GetPinCount() {
     return 1;
 }
 
-
-//
-// Stop
-//
 // Overriden to close the dump file
-//
-STDMETHODIMP CDumpFilter::Stop()
-{
+STDMETHODIMP CDumpFilter::Stop() {
     CAutoLock cObjectLock(m_pLock);
-
-    if (m_pDump)
-        m_pDump->CloseFile();
-
+    if (m_pDump) { m_pDump->CloseFile(); }
     return CBaseFilter::Stop();
 }
 
-
-//
-// Pause
-//
 // Overriden to open the dump file
-//
-STDMETHODIMP CDumpFilter::Pause()
-{
+STDMETHODIMP CDumpFilter::Pause() {
     CAutoLock cObjectLock(m_pLock);
-
-    if (m_pDump)
-    {
-        // GraphEdit calls Pause() before calling Stop() for this filter.
-        // If we have encountered a write error (such as disk full),
-        // then stopping the graph could cause our log to be deleted
-        // (because the current log file handle would be invalid).
-        //
-        // To preserve the log, don't open/create the log file on pause
-        // if we have previously encountered an error.  The write error
-        // flag gets cleared when setting a new log file name or
-        // when restarting the graph with Run().
-        if (!m_pDump->m_fWriteError)
-        {
+    if (m_pDump) {
+        // GraphEdit calls Pause() before calling Stop() for this filter.  If we
+        // have encountered a write error (such as disk full), then stopping the
+        // graph could cause our log to be deleted (because the current log file
+        // handle would be invalid).
+        // To preserve the log, don't open/create the log file on pause if we
+        // have previously encountered an error.  The write error flag gets
+        // cleared when setting a new log file name or when restarting the graph
+        // with Run().
+        if (!m_pDump->m_fWriteError) {
             m_pDump->OpenFile();
         }
     }
-
     return CBaseFilter::Pause();
 }
 
-
-//
-// Run
-//
 // Overriden to open the dump file
-//
-STDMETHODIMP CDumpFilter::Run(REFERENCE_TIME tStart)
-{
+STDMETHODIMP CDumpFilter::Run(REFERENCE_TIME tStart) {
     CAutoLock cObjectLock(m_pLock);
-
-    // Clear the global 'write error' flag that would be set
-    // if we had encountered a problem writing the previous dump file.
-    // (eg. running out of disk space).
+    // Clear the global 'write error' flag that would be set if we had
+    // encountered a problem writing the previous dump file.  (eg. running out
+    // of disk space).
     //
     // Since we are restarting the graph, a new file will be created.
     m_pDump->m_fWriteError = FALSE;
-
     if (m_pDump)
         m_pDump->OpenFile();
-
     return CBaseFilter::Run(tStart);
 }
 
-
-//
-//  Definition of CDumpInputPin
-//
-CDumpInputPin::CDumpInputPin(CDump *pDump,
-                             LPUNKNOWN pUnk,
-                             CBaseFilter *pFilter,
-                             CCritSec *pLock,
-                             CCritSec *pReceiveLock,
-                             HRESULT *phr) :
-
+CDumpInputPin::CDumpInputPin(CDump *pDump, LPUNKNOWN pUnk,
+                             CBaseFilter *pFilter, CCritSec *pLock,
+                             CCritSec *pReceiveLock, HRESULT *phr) :
     CRenderedInputPin(NAME("CDumpInputPin"),
-                  pFilter,                   // Filter
-                  pLock,                     // Locking
-                  phr,                       // Return code
-                  L"Input"),                 // Pin name
+                      pFilter,                   // Filter
+                      pLock,                     // Locking
+                      phr,                       // Return code
+                      L"Input"),                 // Pin name
     m_pReceiveLock(pReceiveLock),
-    m_pDump(pDump),
-    m_tLast(0)
-{
-}
+    m_pDump(pDump), m_tLast(0) { }
 
 
-//
-// CheckMediaType
-//
 // Check if the pin can support this specific proposed type and format
-//
-HRESULT CDumpInputPin::CheckMediaType(const CMediaType *)
-{
+HRESULT CDumpInputPin::CheckMediaType(const CMediaType *) {
     return S_OK;
 }
 
-
-//
-// BreakConnect
-//
-// Break a connection
-//
-HRESULT CDumpInputPin::BreakConnect()
-{
+HRESULT CDumpInputPin::BreakConnect() {
     if (m_pDump->m_pPosition != NULL) {
         m_pDump->m_pPosition->ForceRefresh();
     }
-
     return CRenderedInputPin::BreakConnect();
 }
 
-
-//
-// ReceiveCanBlock
-//
 // We don't hold up source threads on Receive
-//
-STDMETHODIMP CDumpInputPin::ReceiveCanBlock()
-{
+STDMETHODIMP CDumpInputPin::ReceiveCanBlock() {
     return S_FALSE;
 }
 
-
-//
-// Receive
-//
 // Do something with this media sample
-//
-STDMETHODIMP CDumpInputPin::Receive(IMediaSample *pSample)
-{
+STDMETHODIMP CDumpInputPin::Receive(IMediaSample *pSample) {
     CheckPointer(pSample,E_POINTER);
-
     CAutoLock lock(m_pReceiveLock);
     PBYTE pbData;
-
     // Has the filter been stopped yet?
     if (m_pDump->m_hFile == INVALID_HANDLE_VALUE) {
         return NOERROR;
@@ -308,38 +214,27 @@ STDMETHODIMP CDumpInputPin::Receive(IMediaSample *pSample)
            pSample->GetActualDataLength()));
 
     m_tLast = tStart;
-
     // Copy the data to the file
-
     HRESULT hr = pSample->GetPointer(&pbData);
     if (FAILED(hr)) {
         return hr;
     }
-
     return m_pDump->Write(pbData, pSample->GetActualDataLength());
 }
 
-
-//
-// WriteStringInfo
-//
 // Write to the file as text form
-//
-HRESULT CDumpInputPin::WriteStringInfo(IMediaSample *pSample)
-{
+HRESULT CDumpInputPin::WriteStringInfo(IMediaSample *pSample) {
     CheckPointer(pSample,E_POINTER);
 
     TCHAR TempString[256],FileString[256];
     PBYTE pbData;
 
     // Retrieve the time stamps from this sample
-
     REFERENCE_TIME tStart, tStop;
     pSample->GetTime(&tStart, &tStop);
     m_tLast = tStart;
 
     // Write the sample time stamps out
-
     HRESULT hr = StringCchPrintf(FileString,256,TEXT("\r\nRenderer received sample (%dms)\0"),timeGetTime());
     m_pDump->WriteString(FileString);
 
@@ -350,42 +245,31 @@ HRESULT CDumpInputPin::WriteStringInfo(IMediaSample *pSample)
     m_pDump->WriteString(FileString);
 
     // Display the media times for this sample
-
     hr = pSample->GetMediaTime(&tStart, &tStop);
-    if (hr == NOERROR)
-    {
+    if (hr == NOERROR) {
         hr = StringCchPrintf(FileString,256,TEXT("   Start media time (%s)\0"),(LPCTSTR)CDisp(tStart));
         m_pDump->WriteString(FileString);
         hr = StringCchPrintf(FileString,256,TEXT("   End media time (%s)\0"),(LPCTSTR)CDisp(tStop));
         m_pDump->WriteString(FileString);
     }
 
-    // Is this a sync point sample
-
     hr = pSample->IsSyncPoint();
     hr = StringCchPrintf(FileString,256,TEXT("   Sync point (%d)\0"),(hr == S_OK));
     m_pDump->WriteString(FileString);
-
-    // Is this a preroll sample
 
     hr = pSample->IsPreroll();
     hr = StringCchPrintf(FileString,256,TEXT("   Preroll (%d)\0"),(hr == S_OK));
     m_pDump->WriteString(FileString);
 
-    // Is this a discontinuity sample
-
     hr = pSample->IsDiscontinuity();
     hr = StringCchPrintf(FileString,256,TEXT("   Discontinuity (%d)\0"),(hr == S_OK));
     m_pDump->WriteString(FileString);
-
-    // Write the actual data length
 
     LONG DataLength = pSample->GetActualDataLength();
     hr = StringCchPrintf(FileString,256,TEXT("   Actual data length (%d)\0"),DataLength);
     m_pDump->WriteString(FileString);
 
     // Does the sample have a type change aboard
-
     AM_MEDIA_TYPE *pMediaType;
     pSample->GetMediaType(&pMediaType);
     hr = StringCchPrintf(FileString,256,TEXT("   Type changed (%d)\0"),
@@ -395,16 +279,13 @@ HRESULT CDumpInputPin::WriteStringInfo(IMediaSample *pSample)
     DeleteMediaType(pMediaType);
 
     // Copy the data to the file
-
     hr = pSample->GetPointer(&pbData);
     if (FAILED(hr)) {
         return hr;
     }
 
     // Write each complete line out in BYTES_PER_LINES groups
-
-    for (int Loop = 0;Loop < (DataLength / BYTES_PER_LINE);Loop++)
-    {
+    for (int Loop = 0;Loop < (DataLength / BYTES_PER_LINE);Loop++) {
         hr = StringCchPrintf(FileString,256,FIRST_HALF_LINE,
                  pbData[0],pbData[1],pbData[2],
                  pbData[3],pbData[4],pbData[5],pbData[6],
@@ -421,94 +302,55 @@ HRESULT CDumpInputPin::WriteStringInfo(IMediaSample *pSample)
     }
 
     // Write the last few bytes out afterwards
-
     hr = StringCchPrintf(FileString,256,TEXT("   \0"));
-    for (int Loop = 0;Loop < (DataLength % BYTES_PER_LINE);Loop++)
-    {
+    for (int Loop = 0;Loop < (DataLength % BYTES_PER_LINE);Loop++) {
         hr = StringCchPrintf(FileString,256,TEXT("%x \0"),pbData[Loop]);
         hr = StringCchCat(FileString,256,TempString);
     }
-
     m_pDump->WriteString(FileString);
     return NOERROR;
 }
 
-
-//
-// EndOfStream
-//
-STDMETHODIMP CDumpInputPin::EndOfStream(void)
-{
+STDMETHODIMP CDumpInputPin::EndOfStream(void) {
     CAutoLock lock(m_pReceiveLock);
     return CRenderedInputPin::EndOfStream();
+}
 
-} // EndOfStream
-
-
-//
-// NewSegment
-//
 // Called when we are seeked
-//
 STDMETHODIMP CDumpInputPin::NewSegment(REFERENCE_TIME tStart,
                                        REFERENCE_TIME tStop,
-                                       double dRate)
-{
+                                       double dRate) {
     m_tLast = 0;
     return S_OK;
+}
 
-} // NewSegment
-
-
-//
-//  CDump class
-//
-CDump::CDump(LPUNKNOWN pUnk, HRESULT *phr) :
-    CUnknown(NAME("CDump"), pUnk),
-    m_pFilter(NULL),
-    m_pPin(NULL),
-    m_pPosition(NULL),
-    m_hFile(INVALID_HANDLE_VALUE),
-    m_pFileName(0),
-    m_fWriteError(0)
-{
+CDump::CDump(LPUNKNOWN pUnk, HRESULT *phr) : CUnknown(NAME("CDump"), pUnk),
+                                             m_pFilter(NULL), m_pPin(NULL),
+                                             m_pPosition(NULL),
+                                             m_hFile(INVALID_HANDLE_VALUE),
+                                             m_pFileName(0), m_fWriteError(0) {
     ASSERT(phr);
-
     m_pFilter = new CDumpFilter(this, GetOwner(), &m_Lock, phr);
     if (m_pFilter == NULL) {
-        if (phr)
-            *phr = E_OUTOFMEMORY;
-        return;
+      if (phr) { *phr = E_OUTOFMEMORY; }
+      return;
     }
-
-    m_pPin = new CDumpInputPin(this,GetOwner(),
-                               m_pFilter,
-                               &m_Lock,
-                               &m_ReceiveLock,
-                               phr);
+    m_pPin = new CDumpInputPin(this, GetOwner(), m_pFilter,
+                               &m_Lock, &m_ReceiveLock, phr);
     if (m_pPin == NULL) {
-        if (phr)
-            *phr = E_OUTOFMEMORY;
-        return;
+      if (phr) { *phr = E_OUTOFMEMORY; }
+      return;
     }
 }
 
-
-//
-// SetFileName
-//
 // Implemented for IFileSinkFilter support
-//
-STDMETHODIMP CDump::SetFileName(LPCOLESTR pszFileName,const AM_MEDIA_TYPE *pmt)
-{
+STDMETHODIMP CDump::SetFileName(LPCOLESTR pszFileName,const AM_MEDIA_TYPE *pmt) {
     // Is this a valid filename supplied
-
     CheckPointer(pszFileName,E_POINTER);
     if(wcslen(pszFileName) > MAX_PATH)
         return ERROR_FILENAME_EXCED_RANGE;
 
     // Take a copy of the filename
-
     size_t len = 1+lstrlenW(pszFileName);
     m_pFileName = new WCHAR[len];
     if (m_pFileName == 0)
@@ -516,100 +358,63 @@ STDMETHODIMP CDump::SetFileName(LPCOLESTR pszFileName,const AM_MEDIA_TYPE *pmt)
 
     HRESULT hr = StringCchCopyW(m_pFileName, len, pszFileName);
 
-    // Clear the global 'write error' flag that would be set
-    // if we had encountered a problem writing the previous dump file.
-    // (eg. running out of disk space).
+    // Clear global 'write error' flag that would be set if we had encountered a
+    // problem writing the previous dump file (eg. running out of disk space).
     m_fWriteError = FALSE;
 
-    // Create the file then close it
-
-    hr = OpenFile();
+    hr = OpenFile();  // Create the file then close it
     CloseFile();
-
     return hr;
+}
 
-} // SetFileName
-
-
-//
-// GetCurFile
-//
 // Implemented for IFileSinkFilter support
-//
-STDMETHODIMP CDump::GetCurFile(LPOLESTR * ppszFileName,AM_MEDIA_TYPE *pmt)
-{
+STDMETHODIMP CDump::GetCurFile(LPOLESTR * ppszFileName,AM_MEDIA_TYPE *pmt) {
     CheckPointer(ppszFileName, E_POINTER);
     *ppszFileName = NULL;
 
-    if (m_pFileName != NULL)
-    {
+    if (m_pFileName != NULL) {
         size_t len = 1+lstrlenW(m_pFileName);
         *ppszFileName = (LPOLESTR)
         QzTaskMemAlloc(sizeof(WCHAR) * (len));
-
-        if (*ppszFileName != NULL)
-        {
+        if (*ppszFileName != NULL) {
             HRESULT hr = StringCchCopyW(*ppszFileName, len, m_pFileName);
         }
     }
 
-    if(pmt)
-    {
+    if(pmt) {
         ZeroMemory(pmt, sizeof(*pmt));
         pmt->majortype = MEDIATYPE_NULL;
         pmt->subtype = MEDIASUBTYPE_NULL;
     }
-
     return S_OK;
+}
 
-} // GetCurFile
-
-
-// Destructor
-
-CDump::~CDump()
-{
+CDump::~CDump() {
     CloseFile();
-
     delete m_pPin;
     delete m_pFilter;
     delete m_pPosition;
     delete m_pFileName;
 }
 
-
-//
-// CreateInstance
-//
 // Provide the way for COM to create a dump filter
-//
-CUnknown * WINAPI CDump::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
-{
+CUnknown * WINAPI CDump::CreateInstance(LPUNKNOWN punk, HRESULT *phr) {
     ASSERT(phr);
-
     CDump *pNewObject = new CDump(punk, phr);
     if (pNewObject == NULL) {
         if (phr)
             *phr = E_OUTOFMEMORY;
     }
-
     return pNewObject;
+}
 
-} // CreateInstance
 
-
-//
-// NonDelegatingQueryInterface
-//
 // Override this to say what interfaces we support where
-//
-STDMETHODIMP CDump::NonDelegatingQueryInterface(REFIID riid, void ** ppv)
-{
+STDMETHODIMP CDump::NonDelegatingQueryInterface(REFIID riid, void ** ppv) {
     CheckPointer(ppv,E_POINTER);
     CAutoLock lock(&m_Lock);
 
     // Do we have this interface
-
     if (riid == IID_IFileSinkFilter) {
         return GetInterface((IFileSinkFilter *) this, ppv);
     }
@@ -617,66 +422,45 @@ STDMETHODIMP CDump::NonDelegatingQueryInterface(REFIID riid, void ** ppv)
         return m_pFilter->NonDelegatingQueryInterface(riid, ppv);
     }
     else if (riid == IID_IMediaPosition || riid == IID_IMediaSeeking) {
-        if (m_pPosition == NULL)
-        {
+        if (m_pPosition == NULL) {
 
             HRESULT hr = S_OK;
-            m_pPosition = new CPosPassThru(NAME("Dump2 Pass Through"),
+            m_pPosition = new CPosPassThru(NAME("Dump Pass Through"),
                                            (IUnknown *) GetOwner(),
                                            (HRESULT *) &hr, m_pPin);
             if (m_pPosition == NULL)
                 return E_OUTOFMEMORY;
 
-            if (FAILED(hr))
-            {
+            if (FAILED(hr)) {
                 delete m_pPosition;
                 m_pPosition = NULL;
                 return hr;
             }
         }
-
         return m_pPosition->NonDelegatingQueryInterface(riid, ppv);
     }
-
     return CUnknown::NonDelegatingQueryInterface(riid, ppv);
+}
 
-} // NonDelegatingQueryInterface
-
-
-//
-// OpenFile
-//
 // Opens the file ready for dumping
-//
-HRESULT CDump::OpenFile()
-{
+HRESULT CDump::OpenFile() {
     TCHAR *pFileName = NULL;
 
     // Is the file already opened
-    if (m_hFile != INVALID_HANDLE_VALUE) {
-        return NOERROR;
-    }
-
+    if (m_hFile != INVALID_HANDLE_VALUE) { return NOERROR; }
     // Has a filename been set yet
-    if (m_pFileName == NULL) {
-        return ERROR_INVALID_NAME;
-    }
+    if (m_pFileName == NULL) { return ERROR_INVALID_NAME; }
 
     // Convert the UNICODE filename if necessary
-
 #if defined(WIN32) && !defined(UNICODE)
     char convert[MAX_PATH];
-
     if(!WideCharToMultiByte(CP_ACP,0,m_pFileName,-1,convert,MAX_PATH,0,0))
         return ERROR_INVALID_NAME;
-
     pFileName = convert;
 #else
     pFileName = m_pFileName;
 #endif
-
     // Try to open the file
-
     m_hFile = CreateFile((LPCTSTR) pFileName,   // The filename
                          GENERIC_WRITE,         // File access
                          FILE_SHARE_READ,       // Share access
@@ -684,79 +468,45 @@ HRESULT CDump::OpenFile()
                          CREATE_ALWAYS,         // Open flags
                          (DWORD) 0,             // More flags
                          NULL);                 // Template
-
-    if (m_hFile == INVALID_HANDLE_VALUE)
-    {
+    if (m_hFile == INVALID_HANDLE_VALUE) {
         DWORD dwErr = GetLastError();
         return HRESULT_FROM_WIN32(dwErr);
     }
-
-    return S_OK;
-
-} // Open
-
-
-//
-// CloseFile
-//
-// Closes any dump file we have opened
-//
-HRESULT CDump::CloseFile()
-{
-    // Must lock this section to prevent problems related to
-    // closing the file while still receiving data in Receive()
-    CAutoLock lock(&m_Lock);
-
-    if (m_hFile == INVALID_HANDLE_VALUE) {
-        return NOERROR;
-    }
-
-    CloseHandle(m_hFile);
-    m_hFile = INVALID_HANDLE_VALUE; // Invalidate the file
-
-    return NOERROR;
-
-} // Open
-
-
-//
-// Write
-//
-// Write raw data to the file
-//
-HRESULT CDump::Write(PBYTE pbData, LONG lDataLength)
-{
-    DWORD dwWritten;
-
-    // If the file has already been closed, don't continue
-    if (m_hFile == INVALID_HANDLE_VALUE) {
-        return S_FALSE;
-    }
-
-    if (!WriteFile(m_hFile, (PVOID)pbData, (DWORD)lDataLength,
-                   &dwWritten, NULL))
-    {
-        return (HandleWriteFailure());
-    }
-
     return S_OK;
 }
 
+// Closes any dump file we have opened
+HRESULT CDump::CloseFile() {
+    // Must lock this section to prevent problems related to closing the file
+    // while still receiving data in Receive()
+    CAutoLock lock(&m_Lock);
+    if (m_hFile == INVALID_HANDLE_VALUE) { return NOERROR; }
+    CloseHandle(m_hFile);
+    m_hFile = INVALID_HANDLE_VALUE; // Invalidate the file
+    return NOERROR;
+}
 
-HRESULT CDump::HandleWriteFailure(void)
-{
+// Write raw data to the file
+HRESULT CDump::Write(PBYTE pbData, LONG lDataLength) {
+    DWORD dwWritten;
+    // If the file has already been closed, don't continue
+    if (m_hFile == INVALID_HANDLE_VALUE) { return S_FALSE; }
+
+    if (!WriteFile(m_hFile, (PVOID)pbData, (DWORD)lDataLength,
+                   &dwWritten, NULL)) {
+        return (HandleWriteFailure());
+    }
+    return S_OK;
+}
+
+HRESULT CDump::HandleWriteFailure(void) {
     DWORD dwErr = GetLastError();
-
-    if (dwErr == ERROR_DISK_FULL)
-    {
-        // Close the dump file and stop the filter,
-        // which will prevent further write attempts
+    if (dwErr == ERROR_DISK_FULL) {
+        // Close dump file and stop filter, to prevent further write attempts
         m_pFilter->Stop();
-
         // Set a global flag to prevent accidental deletion of the dump file
         m_fWriteError = TRUE;
 
-        // Display a message box to inform the developer of the write failure
         TCHAR szMsg[MAX_PATH + 80];
         HRESULT hr = StringCchPrintf(szMsg, MAX_PATH + 80, TEXT("The disk containing dump file has run out of space, ")
                   TEXT("so the dump filter has been stopped.\r\n\r\n")
@@ -764,23 +514,13 @@ HRESULT CDump::HandleWriteFailure(void)
                   TEXT("to clear this filter error."));
         MessageBox(NULL, szMsg, TEXT("Dump Filter failure"), MB_ICONEXCLAMATION);
     }
-
     return HRESULT_FROM_WIN32(dwErr);
 }
 
-//
-// WriteString
-//
-// Writes the given string into the file
-//
-void CDump::WriteString(TCHAR *pString)
-{
+void CDump::WriteString(TCHAR *pString) {
     ASSERT(pString);
-
     // If the file has already been closed, don't continue
-    if (m_hFile == INVALID_HANDLE_VALUE) {
-        return;
-    }
+    if (m_hFile == INVALID_HANDLE_VALUE) { return; }
 
     BOOL bSuccess;
     DWORD dwWritten = 0;
@@ -790,9 +530,7 @@ void CDump::WriteString(TCHAR *pString)
     bSuccess = WriteFile((HANDLE) m_hFile,
                          (PVOID) pString, (DWORD) dwToWrite,
                          &dwWritten, NULL);
-
-    if (bSuccess == TRUE)
-    {
+    if (bSuccess == TRUE) {
         // Append a carriage-return and newline to the file
         const TCHAR *pEndOfLine = TEXT("\r\n\0");
         dwWritten = 0;
@@ -802,14 +540,9 @@ void CDump::WriteString(TCHAR *pString)
                              (PVOID) pEndOfLine, (DWORD) dwToWrite,
                              &dwWritten, NULL);
     }
-
     // If either of the writes failed, stop receiving data
-    if (!bSuccess || (dwWritten < dwToWrite))
-    {
-        HandleWriteFailure();
-    }
-
-} // WriteString
+    if (!bSuccess || (dwWritten < dwToWrite)) { HandleWriteFailure();  }
+}
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -819,37 +552,20 @@ void CDump::WriteString(TCHAR *pString)
 //
 ////////////////////////////////////////////////////////////////////////
 
-//
-// DllRegisterSever
-//
 // Handle the registration of this filter
-//
-STDAPI DllRegisterServer()
-{
+STDAPI DllRegisterServer() {
     return AMovieDllRegisterServer2( TRUE );
+}
 
-} // DllRegisterServer
-
-
-//
-// DllUnregisterServer
-//
-STDAPI DllUnregisterServer()
-{
+STDAPI DllUnregisterServer() {
     return AMovieDllRegisterServer2( FALSE );
+}
 
-} // DllUnregisterServer
-
-
-//
-// DllEntryPoint
-//
 extern "C" BOOL WINAPI DllEntryPoint(HINSTANCE, ULONG, LPVOID);
 
 BOOL APIENTRY DllMain(HANDLE hModule,
                       DWORD  dwReason,
-                      LPVOID lpReserved)
-{
+                      LPVOID lpReserved) {
 	return DllEntryPoint((HINSTANCE)(hModule), dwReason, lpReserved);
 }
 
