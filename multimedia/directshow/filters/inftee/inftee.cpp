@@ -7,7 +7,6 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
-
 // Summary
 //
 // This is a sample DirectShow pass-through filter. We have a single input
@@ -223,7 +222,7 @@ CTeeOutputPin *CTee::CreateNextOutputPin(CTee *pTee)
                                             &hr, szbuf,
                                             m_NextOutputPinNumber);
 
-    if (FAILED(hr) || pPin == NULL) 
+    if (FAILED(hr) || pPin == NULL)
     {
         delete pPin;
         return NULL;
@@ -243,18 +242,18 @@ void CTee::DeleteOutputPin(CTeeOutputPin *pPin)
     ASSERT(pPin);
     if (!pPin)
         return;
-        
+
     POSITION pos = m_OutputPinsList.GetHeadPosition();
 
-    while(pos) 
+    while(pos)
     {
         POSITION posold = pos;         // Remember this position
         CTeeOutputPin *pOutputPin = m_OutputPinsList.GetNext(pos);
 
-        if (pOutputPin == pPin) 
+        if (pOutputPin == pPin)
         {
             // If this pin holds the seek interface release it
-            if (pPin->m_bHoldsSeek) 
+            if (pPin->m_bHoldsSeek)
             {
                 InterlockedExchange(&m_lCanSeek, FALSE);
                 pPin->m_bHoldsSeek = FALSE;
@@ -282,7 +281,7 @@ int CTee::GetNumFreePins()
     int n = 0;
     POSITION pos = m_OutputPinsList.GetHeadPosition();
 
-    while(pos) 
+    while(pos)
     {
         CTeeOutputPin *pOutputPin = m_OutputPinsList.GetNext(pos);
 
@@ -310,7 +309,7 @@ CTeeOutputPin *CTee::GetPinNFromList(int n)
     n++;       // Make the number 1 based
 
     CTeeOutputPin *pOutputPin=0;
-    while(n) 
+    while(n)
     {
         pOutputPin = m_OutputPinsList.GetNext(pos);
         n--;
@@ -345,7 +344,7 @@ STDMETHODIMP CTee::Pause()
     CAutoLock cObjectLock(m_pLock);
     HRESULT hr = CBaseFilter::Pause();
 
-    if (m_Input.IsConnected() == FALSE) 
+    if (m_Input.IsConnected() == FALSE)
     {
         m_Input.EndOfStream();
     }
@@ -364,7 +363,7 @@ STDMETHODIMP CTee::Run(REFERENCE_TIME tStart)
     CAutoLock cObjectLock(m_pLock);
     HRESULT hr = CBaseFilter::Run(tStart);
 
-    if (m_Input.IsConnected() == FALSE) 
+    if (m_Input.IsConnected() == FALSE)
     {
         m_Input.EndOfStream();
     }
@@ -408,7 +407,7 @@ void DisplayMediaType(TCHAR *pDescription, const CMediaType *pmt)
     ASSERT(pmt);
     if (!pmt)
         return;
-        
+
     // Dump the GUID types and a short description
 
     DbgLog((LOG_TRACE,2,TEXT("")));
@@ -461,24 +460,24 @@ HRESULT CTeeInputPin::CheckMediaType(const CMediaType *pmt)
     int n = m_pTee->m_NumOutputPins;
     POSITION pos = m_pTee->m_OutputPinsList.GetHeadPosition();
 
-    while(n) 
+    while(n)
     {
         CTeeOutputPin *pOutputPin = m_pTee->m_OutputPinsList.GetNext(pos);
 
-        if (pOutputPin != NULL) 
+        if (pOutputPin != NULL)
         {
-            if (pOutputPin->m_Connected != NULL) 
+            if (pOutputPin->m_Connected != NULL)
             {
                 // The pin is connected, check its peer
                 hr = pOutputPin->m_Connected->QueryAccept(pmt);
-                if (hr != NOERROR) 
+                if (hr != NOERROR)
                 {
                     m_bInsideCheckMediaType = FALSE;
                     return VFW_E_TYPE_NOT_ACCEPTED;
                 }
             }
-        } 
-        else 
+        }
+        else
         {
             // We should have as many pins as the count says we have
             ASSERT(FALSE);
@@ -567,16 +566,16 @@ HRESULT CTeeInputPin::EndOfStream()
     int n = m_pTee->m_NumOutputPins;
     POSITION pos = m_pTee->m_OutputPinsList.GetHeadPosition();
 
-    while(n) 
+    while(n)
     {
         CTeeOutputPin *pOutputPin = m_pTee->m_OutputPinsList.GetNext(pos);
-        if (pOutputPin != NULL) 
+        if (pOutputPin != NULL)
         {
             hr = pOutputPin->DeliverEndOfStream();
             if (FAILED(hr))
                 return hr;
-        } 
-        else 
+        }
+        else
         {
             // We should have as many pins as the count says we have
             ASSERT(FALSE);
@@ -602,16 +601,16 @@ HRESULT CTeeInputPin::BeginFlush()
     int n = m_pTee->m_NumOutputPins;
     POSITION pos = m_pTee->m_OutputPinsList.GetHeadPosition();
 
-    while(n) 
+    while(n)
     {
         CTeeOutputPin *pOutputPin = m_pTee->m_OutputPinsList.GetNext(pos);
-        if (pOutputPin != NULL) 
+        if (pOutputPin != NULL)
         {
             hr = pOutputPin->DeliverBeginFlush();
             if (FAILED(hr))
                 return hr;
-        } 
-        else 
+        }
+        else
         {
             // We should have as many pins as the count says we have
             ASSERT(FALSE);
@@ -663,7 +662,7 @@ HRESULT CTeeInputPin::EndFlush()
 //
 // NewSegment
 //
-                    
+
 HRESULT CTeeInputPin::NewSegment(REFERENCE_TIME tStart,
                                  REFERENCE_TIME tStop,
                                  double dRate)
@@ -746,7 +745,7 @@ HRESULT CTeeInputPin::Receive(IMediaSample *pSample)
 HRESULT CTeeInputPin::CompleteConnect(IPin *pReceivePin)
 {
     ASSERT(pReceivePin);
-    
+
     HRESULT hr = CBaseInputPin::CompleteConnect(pReceivePin);
     if(FAILED(hr))
     {
@@ -1313,8 +1312,8 @@ HRESULT CTeeOutputPin::DeliverEndFlush()
 //
 // DeliverNewSegment
 //
-HRESULT CTeeOutputPin::DeliverNewSegment(REFERENCE_TIME tStart, 
-                                         REFERENCE_TIME tStop,  
+HRESULT CTeeOutputPin::DeliverNewSegment(REFERENCE_TIME tStart,
+                                         REFERENCE_TIME tStop,
                                          double dRate)
 {
     // Make sure that we have an output queue
@@ -1373,7 +1372,7 @@ STDMETHODIMP CTeeOutputPin::Notify(IBaseFilter *pSender, Quality q)
 
 ////////////////////////////////////////////////////////////////////////
 //
-// Exported entry points for registration and unregistration 
+// Exported entry points for registration and unregistration
 // (in this case they only call through to default implementations).
 //
 ////////////////////////////////////////////////////////////////////////
@@ -1402,8 +1401,8 @@ DllUnregisterServer()
 //
 extern "C" BOOL WINAPI DllEntryPoint(HINSTANCE, ULONG, LPVOID);
 
-BOOL APIENTRY DllMain(HANDLE hModule, 
-                      DWORD  dwReason, 
+BOOL APIENTRY DllMain(HANDLE hModule,
+                      DWORD  dwReason,
                       LPVOID lpReserved)
 {
 	return DllEntryPoint((HINSTANCE)(hModule), dwReason, lpReserved);

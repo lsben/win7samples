@@ -10,7 +10,6 @@
 #include <streams.h>
 #include "vidprop.h"
 
-
 #ifndef __SAMPVID__
 #define __SAMPVID__
 

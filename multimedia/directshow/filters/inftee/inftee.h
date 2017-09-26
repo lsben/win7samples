@@ -10,16 +10,12 @@
 #ifndef __INFTEE__
 #define __INFTEE__
 
-// define a GUID for infinite tee filters
-
-// { 022B8142-0946-11cf-BCB1-444553540000 }
+// define GUID for infinite tee filters { 022B8142-0946-11cf-BCB1-444553540000 }
 DEFINE_GUID(CLSID_Tee,
 0x22b8142, 0x946, 0x11cf, 0xbc, 0xb1, 0x44, 0x45, 0x53, 0x54, 0x0, 0x0);
 
 class CTee;
 class CTeeOutputPin;
-
-// class for the Tee filter's Input pin
 
 class CTeeInputPin : public CBaseInputPin
 {
@@ -28,13 +24,7 @@ class CTeeInputPin : public CBaseInputPin
     BOOL m_bInsideCheckMediaType;  // Re-entrancy control
 
 public:
-
-    // Constructor and destructor
-    CTeeInputPin(TCHAR *pObjName,
-                 CTee *pTee,
-                 HRESULT *phr,
-                 LPCWSTR pPinName);
-
+    CTeeInputPin(TCHAR *pObjName, CTee *pTee, HRESULT *phr, LPCWSTR pPinName);
 #ifdef DEBUG
     ~CTeeInputPin();
 #endif
@@ -53,18 +43,12 @@ public:
     STDMETHODIMP EndOfStream();
     STDMETHODIMP BeginFlush();
     STDMETHODIMP EndFlush();
-    STDMETHODIMP NewSegment(
-                    REFERENCE_TIME tStart,
-                    REFERENCE_TIME tStop,
-                    double dRate);
+    STDMETHODIMP NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop,
+                            double dRate);
 
     // Handles the next block of data from the stream
     STDMETHODIMP Receive(IMediaSample *pSample);
-
 };
-
-
-// Class for the Tee filter's Output pins.
 
 class CTeeOutputPin : public CBaseOutputPin
 {
@@ -80,15 +64,8 @@ class CTeeOutputPin : public CBaseOutputPin
     LONG m_cOurRef;                // We maintain reference counting
 
 public:
-
-    // Constructor and destructor
-
-    CTeeOutputPin(TCHAR *pObjName,
-                   CTee *pTee,
-                   HRESULT *phr,
-                   LPCWSTR pPinName,
-                   INT PinNumber);
-
+    CTeeOutputPin(TCHAR *pObjName, CTee *pTee, HRESULT *phr,
+                  LPCWSTR pPinName, INT PinNumber);
 #ifdef DEBUG
     ~CTeeOutputPin();
 #endif
@@ -124,19 +101,14 @@ public:
     HRESULT DeliverEndOfStream();
     HRESULT DeliverBeginFlush();
     HRESULT DeliverEndFlush();
-    HRESULT DeliverNewSegment(
-                    REFERENCE_TIME tStart,
-                    REFERENCE_TIME tStop,
-                    double dRate);
-
+    HRESULT DeliverNewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop,
+                              double dRate);
 
     // Overriden to handle quality messages
     STDMETHODIMP Notify(IBaseFilter *pSender, Quality q);
 };
 
-
 // Class for the Tee filter
-
 class CTee: public CCritSec, public CBaseFilter
 {
     // Let the pins access our internal state
@@ -154,7 +126,6 @@ class CTee: public CCritSec, public CBaseFilter
     IMemAllocator *m_pAllocator;    // Allocator from our input pin
 
 public:
-
     CTee(TCHAR *pName,LPUNKNOWN pUnk,HRESULT *hr);
     ~CTee();
 
@@ -170,9 +141,7 @@ public:
     STDMETHODIMP Stop();
 
 protected:
-
     // The following manage the list of output pins
-
     void InitOutputPinsList();
     CTeeOutputPin *GetPinNFromList(int n);
     CTeeOutputPin *CreateNextOutputPin(CTee *pTee);

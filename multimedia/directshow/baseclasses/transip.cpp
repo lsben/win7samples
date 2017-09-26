@@ -255,11 +255,6 @@
 #include <measure.h>
 #include <transip.h>
 
-
-// =================================================================
-// Implements the CTransInPlaceFilter class
-// =================================================================
-
 CTransInPlaceFilter::CTransInPlaceFilter
    ( __in_opt LPCTSTR    pName,
      __inout_opt LPUNKNOWN  pUnk,
@@ -272,9 +267,8 @@ CTransInPlaceFilter::CTransInPlaceFilter
 {
 #ifdef PERF
     RegisterPerfId();
-#endif //  PERF
-
-} // constructor
+#endif
+}
 
 #ifdef UNICODE
 CTransInPlaceFilter::CTransInPlaceFilter
@@ -289,60 +283,47 @@ CTransInPlaceFilter::CTransInPlaceFilter
 {
 #ifdef PERF
     RegisterPerfId();
-#endif //  PERF
-
-} // constructor
+#endif
+}
 #endif
 
 // return a non-addrefed CBasePin * for the user to addref if he holds onto it
 // for longer than his pointer to us. We create the pins dynamically when they
 // are asked for rather than in the constructor. This is because we want to
 // give the derived class an oppportunity to return different pin objects
-
+//
 // As soon as any pin is needed we create both (this is different from the
 // usual transform filter) because enumerators, allocators etc are passed
 // through from one pin to another and it becomes very painful if the other
 // pin isn't there.  If we fail to create either pin we ensure we fail both.
-
 CBasePin *
 CTransInPlaceFilter::GetPin(int n)
 {
     HRESULT hr = S_OK;
 
     // Create an input pin if not already done
-
     if (m_pInput == NULL) {
-
         m_pInput = new CTransInPlaceInputPin( NAME("TransInPlace input pin")
                                             , this        // Owner filter
                                             , &hr         // Result code
                                             , L"Input"    // Pin name
                                             );
-
-        // Constructor for CTransInPlaceInputPin can't fail
         ASSERT(SUCCEEDED(hr));
     }
 
-    // Create an output pin if not already done
-
     if (m_pInput!=NULL && m_pOutput == NULL) {
-
         m_pOutput = new CTransInPlaceOutputPin( NAME("TransInPlace output pin")
                                               , this       // Owner filter
                                               , &hr        // Result code
                                               , L"Output"  // Pin name
                                               );
-
         // a failed return code should delete the object
-
         ASSERT(SUCCEEDED(hr));
         if (m_pOutput == NULL) {
             delete m_pInput;
             m_pInput = NULL;
         }
     }
-
-    // Return the appropriate pin
 
     ASSERT (n>=0 && n<=1);
     if (n == 0) {
@@ -352,10 +333,7 @@ CTransInPlaceFilter::GetPin(int n)
     } else {
         return NULL;
     }
-
-} // GetPin
-
-
+}
 
 // dir is the direction of our pin.
 // pReceivePin is the pin we are connecting to.
@@ -380,7 +358,6 @@ HRESULT CTransInPlaceFilter::CompleteConnect(PIN_DIRECTION dir, IPin *pReceivePi
     // connection type first but more deterministic and simple is to
     // call ReconnectEx passing the type we want to reconnect with
     // via the base class ReconeectPin method.
-
     if (dir == PINDIR_OUTPUT) {
         if( m_pInput->IsConnected() ) {
             return ReconnectPin( m_pInput, &m_pOutput->CurrentMediaType() );
@@ -391,7 +368,6 @@ HRESULT CTransInPlaceFilter::CompleteConnect(PIN_DIRECTION dir, IPin *pReceivePi
     ASSERT(dir == PINDIR_INPUT);
 
     // Reconnect output if necessary
-
     if( m_pOutput->IsConnected() ) {
 
         if (  m_pInput->CurrentMediaType()
@@ -402,16 +378,10 @@ HRESULT CTransInPlaceFilter::CompleteConnect(PIN_DIRECTION dir, IPin *pReceivePi
     }
     return NOERROR;
 
-} // ComnpleteConnect
+}
 
-
-//
-// DecideBufferSize
-//
 // Tell the output pin's allocator what size buffers we require.
 // *pAlloc will be the allocator our output pin is using.
-//
-
 HRESULT CTransInPlaceFilter::DecideBufferSize
             ( IMemAllocator *pAlloc
             , __inout ALLOCATOR_PROPERTIES *pProperties
@@ -424,7 +394,6 @@ HRESULT CTransInPlaceFilter::DecideBufferSize
     if (m_pInput->IsConnected()) {
         // Get the input pin allocator, and get its size and count.
         // we don't care about his alignment and prefix.
-
         hr = InputPin()->PeekAllocator()->GetProperties(&Request);
         if (FAILED(hr)) {
             // Input connected but with a secretive allocator - enough!
@@ -438,8 +407,6 @@ HRESULT CTransInPlaceFilter::DecideBufferSize
         Request.cBuffers = 1;
         Request.cbBuffer = 1;
     }
-
-
     DbgLog((LOG_MEMORY,1,TEXT("Setting Allocator Requirements")));
     DbgLog((LOG_MEMORY,1,TEXT("Count %d, Size %d"),
            Request.cBuffers, Request.cbBuffer));
@@ -447,7 +414,6 @@ HRESULT CTransInPlaceFilter::DecideBufferSize
     // Pass the allocator requirements to our output side
     // but do a little sanity checking first or we'll just hit
     // asserts in the allocator.
-
     pProperties->cBuffers = Request.cBuffers;
     pProperties->cbBuffer = Request.cbBuffer;
     pProperties->cbAlign = Request.cbAlign;
@@ -464,7 +430,6 @@ HRESULT CTransInPlaceFilter::DecideBufferSize
            Actual.cBuffers, Actual.cbBuffer, Actual.cbAlign));
 
     // Make sure we got the right alignment and at least the minimum required
-
     if (  (Request.cBuffers > Actual.cBuffers)
        || (Request.cbBuffer > Actual.cbBuffer)
        || (Request.cbAlign  > Actual.cbAlign)
@@ -472,17 +437,12 @@ HRESULT CTransInPlaceFilter::DecideBufferSize
         return E_FAIL;
     }
     return NOERROR;
+}
 
-} // DecideBufferSize
-
-//
-// Copy
-//
 // return a pointer to an identical copy of pSample
 __out_opt IMediaSample * CTransInPlaceFilter::Copy(IMediaSample *pSource)
 {
     IMediaSample * pDest;
-
     HRESULT hr;
     REFERENCE_TIME tStart, tStop;
     const BOOL bTime = S_OK == pSource->GetTime( &tStart, &tStop);
@@ -498,7 +458,6 @@ __out_opt IMediaSample * CTransInPlaceFilter::Copy(IMediaSample *pSource)
     if (FAILED(hr)) {
         return NULL;
     }
-
     ASSERT(pDest);
     IMediaSample2 *pSample2;
     if (SUCCEEDED(pDest->QueryInterface(IID_IMediaSample2, (void **)&pSample2))) {
@@ -531,9 +490,7 @@ __out_opt IMediaSample * CTransInPlaceFilter::Copy(IMediaSample *pSource)
             pDest->SetMediaType(pMediaType);
             DeleteMediaType( pMediaType );
         }
-
     }
-
     m_bSampleSkipped = FALSE;
 
     // Copy the sample media times
@@ -570,14 +527,10 @@ __out_opt IMediaSample * CTransInPlaceFilter::Copy(IMediaSample *pSource)
             CopyMemory( (PVOID) pDestBuffer, (PVOID) pSourceBuffer, lDataLength );
         }
     }
-
     return pDest;
-
-} // Copy
-
+}
 
 // override this to customize the transform process
-
 HRESULT
 CTransInPlaceFilter::Receive(IMediaSample *pSample)
 {
@@ -592,11 +545,7 @@ CTransInPlaceFilter::Receive(IMediaSample *pSample)
     MSR_START(m_idTransInPlace);
 
     if (UsingDifferentAllocators()) {
-
-        // We have to copy the data.
-
         pSample = Copy(pSample);
-
         if (pSample==NULL) {
             MSR_STOP(m_idTransInPlace);
             return E_UNEXPECTED;
@@ -644,19 +593,8 @@ CTransInPlaceFilter::Receive(IMediaSample *pSample)
     if (UsingDifferentAllocators()) {
         pSample->Release();
     }
-
     return hr;
-
-} // Receive
-
-
-
-// =================================================================
-// Implements the CTransInPlaceInputPin class
-// =================================================================
-
-
-// constructor
+}
 
 CTransInPlaceInputPin::CTransInPlaceInputPin
     ( __in_opt LPCTSTR             pObjectName
@@ -674,13 +612,7 @@ CTransInPlaceInputPin::CTransInPlaceInputPin
     DbgLog((LOG_TRACE, 2
            , TEXT("CTransInPlaceInputPin::CTransInPlaceInputPin")));
 
-} // constructor
-
-
-// =================================================================
-// Implements IMemInputPin interface
-// =================================================================
-
+}
 
 // If the downstream filter has one then offer that (even if our own output
 // pin is not using it yet.  If the upstream filter chooses it then we will
@@ -690,7 +622,6 @@ CTransInPlaceInputPin::CTransInPlaceInputPin
 //       it could mean offerring our own
 //     ) or it could mean offering the one from downstream
 // Else fail to offer any allocator at all.
-
 STDMETHODIMP CTransInPlaceInputPin::GetAllocator(__deref_out IMemAllocator ** ppAllocator)
 {
     CheckPointer(ppAllocator,E_POINTER);
@@ -698,7 +629,6 @@ STDMETHODIMP CTransInPlaceInputPin::GetAllocator(__deref_out IMemAllocator ** pp
     CAutoLock cObjectLock(m_pLock);
 
     HRESULT hr;
-
     if ( m_pTIPFilter->m_pOutput->IsConnected() ) {
         //  Store the allocator we got
         hr = m_pTIPFilter->OutputPin()->ConnectedIMemInputPin()
@@ -715,14 +645,11 @@ STDMETHODIMP CTransInPlaceInputPin::GetAllocator(__deref_out IMemAllocator ** pp
         hr = CTransformInputPin::GetAllocator( ppAllocator );
     }
     return hr;
-
-} // GetAllocator
+}
 
 
 
 /* Get told which allocator the upstream output pin is actually going to use */
-
-
 STDMETHODIMP
 CTransInPlaceInputPin::NotifyAllocator(
     IMemAllocator * pAllocator,
@@ -731,7 +658,6 @@ CTransInPlaceInputPin::NotifyAllocator(
     HRESULT hr = S_OK;
     CheckPointer(pAllocator,E_POINTER);
     ValidateReadPtr(pAllocator,sizeof(IMemAllocator));
-
     CAutoLock cObjectLock(m_pLock);
 
     m_bReadOnly = bReadOnly;
@@ -751,7 +677,6 @@ CTransInPlaceInputPin::NotifyAllocator(
     if (bReadOnly && m_pTIPFilter->m_bModifiesData) {
         IMemAllocator *pOutputAllocator =
             m_pTIPFilter->OutputPin()->PeekAllocator();
-
         //  Make sure we have an output allocator
         if (pOutputAllocator == NULL) {
             hr = m_pTIPFilter->OutputPin()->ConnectedIMemInputPin()->
@@ -781,7 +706,6 @@ CTransInPlaceInputPin::NotifyAllocator(
                     hr =  E_FAIL;
                 }
             }
-
             //  Set the allocator on the output pin
             if (SUCCEEDED(hr)) {
                 hr = m_pTIPFilter->OutputPin()->ConnectedIMemInputPin()
@@ -795,23 +719,16 @@ CTransInPlaceInputPin::NotifyAllocator(
             m_pTIPFilter->OutputPin()->SetAllocator( pAllocator );
         }
     }
-
     if (SUCCEEDED(hr)) {
-
         // It's possible that the old and the new are the same thing.
         // AddRef before release ensures that we don't unload it.
         pAllocator->AddRef();
-
         if( m_pAllocator != NULL )
             m_pAllocator->Release();
-
         m_pAllocator = pAllocator;    // We have an allocator for the input pin
     }
-
     return hr;
-
-} // NotifyAllocator
-
+}
 
 // EnumMediaTypes
 // - pass through to our downstream filter
@@ -820,17 +737,13 @@ STDMETHODIMP CTransInPlaceInputPin::EnumMediaTypes( __deref_out IEnumMediaTypes 
     // Can only pass through if connected
     if( !m_pTIPFilter->m_pOutput->IsConnected() )
         return VFW_E_NOT_CONNECTED;
-
     return m_pTIPFilter->m_pOutput->GetConnected()->EnumMediaTypes( ppEnum );
-
-} // EnumMediaTypes
-
+}
 
 // CheckMediaType
 // - agree to anything if not connected,
 // otherwise pass through to the downstream filter.
 // This assumes that the filter does not change the media type.
-
 HRESULT CTransInPlaceInputPin::CheckMediaType(const CMediaType *pmt )
 {
     HRESULT hr = m_pTIPFilter->CheckInputType(pmt);
@@ -840,27 +753,22 @@ HRESULT CTransInPlaceInputPin::CheckMediaType(const CMediaType *pmt )
         return m_pTIPFilter->m_pOutput->GetConnected()->QueryAccept( pmt );
     else
         return S_OK;
-
-} // CheckMediaType
-
+}
 
 // If upstream asks us what our requirements are, we will try to ask downstream
 // if that doesn't work, we'll just take the defaults.
 STDMETHODIMP
 CTransInPlaceInputPin::GetAllocatorRequirements(__out ALLOCATOR_PROPERTIES *pProps)
 {
-
     if( m_pTIPFilter->m_pOutput->IsConnected() )
         return m_pTIPFilter->OutputPin()
                ->ConnectedIMemInputPin()->GetAllocatorRequirements( pProps );
     else
         return E_NOTIMPL;
-
-} // GetAllocatorRequirements
-
+}
 
 // CTransInPlaceInputPin::CompleteConnect() calls CBaseInputPin::CompleteConnect()
-// and then calls CTransInPlaceFilter::CompleteConnect().  It does this because 
+// and then calls CTransInPlaceFilter::CompleteConnect().  It does this because
 // CTransInPlaceFilter::CompleteConnect() can reconnect a pin and we do not
 // want to reconnect a pin if CBaseInputPin::CompleteConnect() fails.
 HRESULT
@@ -870,17 +778,8 @@ CTransInPlaceInputPin::CompleteConnect(IPin *pReceivePin)
     if (FAILED(hr)) {
         return hr;
     }
-
     return m_pTransformFilter->CompleteConnect(PINDIR_INPUT,pReceivePin);
-} // CompleteConnect
-
-
-// =================================================================
-// Implements the CTransInPlaceOutputPin class
-// =================================================================
-
-
-// constructor
+}
 
 CTransInPlaceOutputPin::CTransInPlaceOutputPin(
     __in_opt LPCTSTR pObjectName,
@@ -895,9 +794,7 @@ CTransInPlaceOutputPin::CTransInPlaceOutputPin(
 {
     DbgLog(( LOG_TRACE, 2
            , TEXT("CTransInPlaceOutputPin::CTransInPlaceOutputPin")));
-
-} // constructor
-
+}
 
 // EnumMediaTypes
 // - pass through to our upstream filter
@@ -906,17 +803,14 @@ STDMETHODIMP CTransInPlaceOutputPin::EnumMediaTypes( __deref_out IEnumMediaTypes
     // Can only pass through if connected.
     if( ! m_pTIPFilter->m_pInput->IsConnected() )
         return VFW_E_NOT_CONNECTED;
-
     return m_pTIPFilter->m_pInput->GetConnected()->EnumMediaTypes( ppEnum );
-
-} // EnumMediaTypes
+}
 
 
 
 // CheckMediaType
 // - agree to anything if not connected,
 // otherwise pass through to the upstream filter.
-
 HRESULT CTransInPlaceOutputPin::CheckMediaType(const CMediaType *pmt )
 {
     // Don't accept any output pin type changes if we're copying
@@ -939,12 +833,9 @@ HRESULT CTransInPlaceOutputPin::CheckMediaType(const CMediaType *pmt )
         return m_pTIPFilter->m_pInput->GetConnected()->QueryAccept( pmt );
     else
         return S_OK;
+}
 
-} // CheckMediaType
-
-
-/* Save the allocator pointer in the output pin
-*/
+/* Save the allocator pointer in the output pin*/
 void
 CTransInPlaceOutputPin::SetAllocator(IMemAllocator * pAllocator)
 {
@@ -953,14 +844,13 @@ CTransInPlaceOutputPin::SetAllocator(IMemAllocator * pAllocator)
         m_pAllocator->Release();
     }
     m_pAllocator = pAllocator;
-} // SetAllocator
-
+}
 
 // CTransInPlaceOutputPin::CompleteConnect() calls CBaseOutputPin::CompleteConnect()
-// and then calls CTransInPlaceFilter::CompleteConnect().  It does this because 
-// CTransInPlaceFilter::CompleteConnect() can reconnect a pin and we do not want to 
-// reconnect a pin if CBaseOutputPin::CompleteConnect() fails.  
-// CBaseOutputPin::CompleteConnect() often fails when our output pin is being connected 
+// and then calls CTransInPlaceFilter::CompleteConnect().  It does this because
+// CTransInPlaceFilter::CompleteConnect() can reconnect a pin and we do not want to
+// reconnect a pin if CBaseOutputPin::CompleteConnect() fails.
+// CBaseOutputPin::CompleteConnect() often fails when our output pin is being connected
 // to the Video Mixing Renderer.
 HRESULT
 CTransInPlaceOutputPin::CompleteConnect(IPin *pReceivePin)
@@ -969,6 +859,5 @@ CTransInPlaceOutputPin::CompleteConnect(IPin *pReceivePin)
     if (FAILED(hr)) {
         return hr;
     }
-
     return m_pTransformFilter->CompleteConnect(PINDIR_OUTPUT,pReceivePin);
-} // CompleteConnect
+}

@@ -8,11 +8,11 @@
 //------------------------------------------------------------------------------
 
 
-//
 // The difference between this and Transfrm.h is that Transfrm copies the data.
 //
-// It assumes the filter has one input and one output stream, and has no
-// interest in memory management, interface negotiation or anything else.
+// Like transfrm.h (?) this assumes the filter has one input and one output
+// stream, and has no interest in memory management, interface negotiation or
+// anything else.
 //
 // Derive your class from this, and supply Transform and the media type/format
 // negotiation functions. Implement that class, compile and link and
@@ -22,11 +22,8 @@
 #ifndef __TRANSIP__
 #define __TRANSIP__
 
-// ======================================================================
 // This is the com object that represents a simple transform filter. It
 // supports IBaseFilter, IMediaFilter and two pins through nested interfaces
-// ======================================================================
-
 class CTransInPlaceFilter;
 
 // Several of the pin functions call filter functions to do the work,
@@ -35,19 +32,13 @@ class CTransInPlaceFilter;
 // to derive your own pin class, override GetPin in the filter to supply
 // your own pin classes to the filter.
 
-// ==================================================
-// Implements the input pin
-// ==================================================
-
 class CTransInPlaceInputPin : public CTransformInputPin
 {
-
 protected:
     CTransInPlaceFilter * const m_pTIPFilter;    // our filter
     BOOL                 m_bReadOnly;    // incoming stream is read only
 
 public:
-
     CTransInPlaceInputPin(
         __in_opt LPCTSTR     pObjectName,
         __inout CTransInPlaceFilter *pFilter,
@@ -55,7 +46,6 @@ public:
         __in_opt LPCWSTR              pName);
 
     // --- IMemInputPin -----
-
     // Provide an enumerator for media types by getting one from downstream
     STDMETHODIMP EnumMediaTypes( __deref_out IEnumMediaTypes **ppEnum );
 
@@ -73,39 +63,29 @@ public:
     // Allow the filter to see what allocator we have
     // N.B. This does NOT AddRef
     __out IMemAllocator * PeekAllocator() const
-        {  return m_pAllocator; }
+  {  return m_pAllocator; }
 
     // Pass this on downstream if it ever gets called.
     STDMETHODIMP GetAllocatorRequirements(__out ALLOCATOR_PROPERTIES *pProps);
 
     HRESULT CompleteConnect(IPin *pReceivePin);
-
     inline const BOOL ReadOnly() { return m_bReadOnly ; }
-
-};  // CTransInPlaceInputPin
-
-// ==================================================
-// Implements the output pin
-// ==================================================
+};
 
 class CTransInPlaceOutputPin : public CTransformOutputPin
 {
-
 protected:
     // m_pFilter points to our CBaseFilter
     CTransInPlaceFilter * const m_pTIPFilter;
 
 public:
-
     CTransInPlaceOutputPin(
         __in_opt LPCTSTR     pObjectName,
         __inout CTransInPlaceFilter *pFilter,
         __inout HRESULT             *phr,
         __in_opt LPCWSTR              pName);
 
-
     // --- CBaseOutputPin ------------
-
     // negotiate the allocator and its buffer size/count
     // Insists on using our own allocator.  (Actually the one upstream of us).
     // We don't override this - instead we just agree the default
@@ -122,8 +102,7 @@ public:
     //  Also called by input pin's GetAllocator()
     void SetAllocator(IMemAllocator * pAllocator);
 
-    __out_opt IMemInputPin * ConnectedIMemInputPin()
-        { return m_pInputPin; }
+    __out_opt IMemInputPin * ConnectedIMemInputPin() { return m_pInputPin; }
 
     // Allow the filter to see what allocator we have
     // N.B. This does NOT AddRef
@@ -131,26 +110,20 @@ public:
         {  return m_pAllocator; }
 
     HRESULT CompleteConnect(IPin *pReceivePin);
-
-};  // CTransInPlaceOutputPin
-
+};
 
 class AM_NOVTABLE CTransInPlaceFilter : public CTransformFilter
 {
-
 public:
-
     // map getpin/getpincount for base enum of pins to owner
     // override this to return more specialised pin objects
 
     virtual CBasePin *GetPin(int n);
 
 public:
-
     //  Set bModifiesData == false if your derived filter does
     //  not modify the data samples (for instance it's just copying
     //  them somewhere else or looking at the timestamps).
-
     CTransInPlaceFilter(__in_opt LPCTSTR, __inout_opt LPUNKNOWN, REFCLSID clsid, __inout HRESULT *,
                         bool bModifiesData = true);
 #ifdef UNICODE
@@ -162,8 +135,7 @@ public:
 
     // We override EnumMediaTypes to bypass the transform class enumerator
     // which would otherwise call this.
-    HRESULT GetMediaType(int iPosition, __inout CMediaType *pMediaType)
-        {   DbgBreak("CTransInPlaceFilter::GetMediaType should never be called");
+    HRESULT GetMediaType(int iPosition, __inout CMediaType *pMediaType) {   DbgBreak("CTransInPlaceFilter::GetMediaType should never be called");
             return E_UNEXPECTED;
         }
 
@@ -174,37 +146,29 @@ public:
     // class to call CheckInputType with the assumption that the type
     // does not change.  In Debug builds some calls will be made and
     // we just ensure that they do not assert.
-    HRESULT CheckTransform(const CMediaType *mtIn, const CMediaType *mtOut)
-    {
+    HRESULT CheckTransform(const CMediaType *mtIn, const CMediaType *mtOut) {
         return S_OK;
     };
 
-
-    // =================================================================
     // ----- You may want to override this -----------------------------
-    // =================================================================
-
     HRESULT CompleteConnect(PIN_DIRECTION dir,IPin *pReceivePin);
 
     // chance to customize the transform process
     virtual HRESULT Receive(IMediaSample *pSample);
 
-    // =================================================================
     // ----- You MUST override these -----------------------------------
-    // =================================================================
-
     virtual HRESULT Transform(IMediaSample *pSample) PURE;
 
     // this goes in the factory template table to create new instances
     // static CCOMObject * CreateInstance(LPUNKNOWN, HRESULT *);
 
-
 #ifdef PERF
     // Override to register performance measurement with a less generic string
     // You should do this to avoid confusion with other filters
-    virtual void RegisterPerfId()
-         {m_idTransInPlace = MSR_REGISTER(TEXT("TransInPlace"));}
-#endif // PERF
+    virtual void RegisterPerfId() {
+      m_idTransInPlace = MSR_REGISTER(TEXT("TransInPlace"));
+    }
+#endif
 
 
 // implementation details
@@ -233,8 +197,7 @@ protected:
     };
 
     //  Helper to see if the input and output types match
-    BOOL TypesMatch()
-    {
+    BOOL TypesMatch() {
         return InputPin()->CurrentMediaType() ==
                OutputPin()->CurrentMediaType();
     }
