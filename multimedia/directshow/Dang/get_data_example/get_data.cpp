@@ -7,12 +7,13 @@
 #include <qedit.h>         // for Null Renderer
 #include <filfuncs.h>      // for GetOutPin, GetInPin
 #include <filfuncs.cpp>    // for GetOutPin, GetInPin
-#include "SampleGrabber.h"
+#include "filters/grabber/grabber.h"
 
-HANDLE gWaitEvent = NULL;
+HANDLE gWaitEvent = NULL;  // Signaled in Callback()
 
+// Matches SampleGrabber_Callback.
 HRESULT Callback(IMediaSample* pSample, REFERENCE_TIME* StartTime,
-                 REFERENCE_TIME* StopTime) {
+                 REFERENCE_TIME* StopTime, bool typeChanged_ignore) {
     // Note: We cannot do anything with this sample until we call
     // GetConnectedMediaType on the filter to find out the format.
     DbgLog((LOG_TRACE, 0, "Callback with sample %lx for time %ld",
@@ -22,7 +23,6 @@ HRESULT Callback(IMediaSample* pSample, REFERENCE_TIME* StartTime,
 }
 
 int get_data_test(int argc, char* argv[]) {
-    // Create an event, which is signaled when we get a sample.
     gWaitEvent = CreateEvent( NULL, FALSE, FALSE, NULL );
 
     // The sample grabber is not in the registry, so create it with 'new'.
