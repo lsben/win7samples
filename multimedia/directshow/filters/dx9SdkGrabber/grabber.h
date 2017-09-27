@@ -32,7 +32,6 @@ MIDL_INTERFACE("6B652FFF-11FE-4FCE-92AD-0266B5D7C78F")
 IGrabberSample : public IUnknown
 {
     public:
-
         virtual HRESULT STDMETHODCALLTYPE SetAcceptedMediaType(
             const CMediaType *pType) = 0;
 
@@ -81,7 +80,7 @@ public:
 };
 
 // we override the input pin class so we can provide a media type
-// to speed up connection times. When you try to connect a filesourceasync
+// to speed up connection times. When you try to connect a FileSourceAsync
 // to a transform filter, DirectShow will insert a splitter and then
 // start trying codecs, both audio and video, video codecs first. If
 // your sample grabber's set to connect to audio, unless we do this, it
@@ -96,6 +95,7 @@ class CSampleGrabberInPin : public CTransInPlaceInputPin
     ALLOCATOR_PROPERTIES m_allocprops;
     BYTE * m_pBuffer;
     BOOL m_bMediaTypeChanged;
+    //
 
 protected:
     CSampleGrabber * SampleGrabber( ) { return (CSampleGrabber*) m_pFilter; }
