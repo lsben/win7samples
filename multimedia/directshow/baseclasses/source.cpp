@@ -172,28 +172,18 @@ int CSource::GetPinCount(void) {
 // Return a non-addref'd pointer to pin n
 // needed by CBaseFilter
 CBasePin *CSource::GetPin(int n) {
-
     CAutoLock lock(&m_cStateLock);
-
     // n must be in the range 0..m_iPins-1
     // if m_iPins>n  && n>=0 it follows that m_iPins>0
     // which is what used to be checked (i.e. checking that we have a pin)
     if ((n >= 0) && (n < m_iPins)) {
-
-        ASSERT(m_paStreams[n]);
-	return m_paStreams[n];
+       ASSERT(m_paStreams[n]);
+       return m_paStreams[n];
     }
     return NULL;
 }
 
-
-//
-
-
-// *
 // * --- CSourceStream ----
-// *
-
 //
 // Set Id to point to a CoTaskMemAlloc'd
 STDMETHODIMP CSourceStream::QueryId(__deref_out LPWSTR *Id) {
@@ -423,7 +413,7 @@ DWORD CSourceStream::ThreadProc(void) {
 	case CMD_RUN:
 	    DbgLog((LOG_ERROR, 1, TEXT("CMD_RUN received before a CMD_PAUSE???")));
 	    // !!! fall through???
-	
+
 	case CMD_PAUSE:
 	    Reply(NOERROR);
 	    DoBufferProcessingLoop();

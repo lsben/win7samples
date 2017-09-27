@@ -27,58 +27,57 @@ int get_data_test(int argc, char* argv[]) {
 
     // The sample grabber is not in the registry, so create it with 'new'.
     HRESULT hr = S_OK;
-    CSampleGrabber *pGrab = new CSampleGrabber(NULL, &hr, FALSE);
-    pGrab->AddRef();
+    CSampleGrabber *pSampleGrabber = new CSampleGrabber(NULL, &hr, FALSE);
+    pSampleGrabber->AddRef();
 
     // Set the callback function of the filter.
-    pGrab->SetCallback(&Callback);
+    pSampleGrabber->SetCallback(&Callback);
 
     // Set up a partially specified media type.
-    CMediaType mt;
-    mt.SetType(&MEDIATYPE_Video);
-    mt.SetSubtype(&MEDIASUBTYPE_RGB24);
-    hr = pGrab->SetAcceptedMediaType(&mt);
+    CMediaType media_type;
+    media_type.SetType(&MEDIATYPE_Video);
+    media_type.SetSubtype(&MEDIASUBTYPE_RGB24);
+    hr = pSampleGrabber->SetAcceptedMediaType(&media_type);
 
     // Create the filter graph manager.
-    CComPtr<IFilterGraph> pGraph;
-    hr = pGraph.CoCreateInstance( CLSID_FilterGraph );
+    CComPtr<IFilterGraph> pFilterGraph;
+    hr = pFilterGraph.CoCreateInstance( CLSID_FilterGraph );
 
     // Query for other useful interfaces.
-    CComQIPtr<IGraphBuilder, &IID_IGraphBuilder> pBuilder(pGraph);
-    CComQIPtr<IMediaSeeking, &IID_IMediaSeeking> pSeeking(pGraph);
-    CComQIPtr<IMediaControl, &IID_IMediaControl> pControl(pGraph);
-    CComQIPtr<IMediaFilter, &IID_IMediaFilter> pMediaFilter(pGraph);
-    CComQIPtr<IMediaEvent, &IID_IMediaEvent> pEvent(pGraph);
+    CComQIPtr<IGraphBuilder, &IID_IGraphBuilder> pGraphBuilder(pFilterGraph);
+    CComQIPtr<IMediaSeeking, &IID_IMediaSeeking> pSeeking(pFilterGraph);
+    CComQIPtr<IMediaControl, &IID_IMediaControl> pControl(pFilterGraph);
+    CComQIPtr<IMediaFilter, &IID_IMediaFilter> pMediaFilter(pFilterGraph);
+    CComQIPtr<IMediaEvent, &IID_IMediaEvent> pEvent(pFilterGraph);
 
     // Add a source filter to the graph.
-    CComPtr<IBaseFilter> pSource;
-    hr = pBuilder->AddSourceFilter(L"C:\\test.avi", L"Source", &pSource);
+    CComPtr<IBaseFilter> pSourceFilter;
+    hr = pGraphBuilder->AddSourceFilter(L"C:\\test.avi", L"Source", &pSourceFilter);
 
     // Add the sample grabber to the graph.
-    hr = pBuilder->AddFilter(pGrab, L"Grabber");
+    hr = pGraphBuilder->AddFilter(pSampleGrabber, L"Grabber");
 
     // Find the input and output pins, and connect them.
-    IPin *pSourceOut = GetOutPin(pSource, 0);
-    IPin *pGrabIn = GetInPin(pGrab, 0);
-    hr = pBuilder->Connect(pSourceOut, pGrabIn);
+    IPin *pSourceOut = GetOutPin(pSourceFilter, 0);
+    IPin *pGrabIn = GetInPin(pSampleGrabber, 0);
+    hr = pGraphBuilder->Connect(pSourceOut, pGrabIn);
 
     // Create the Null Renderer filter and add it to the graph.
     CComPtr<IBaseFilter> pNull;
     hr = pNull.CoCreateInstance(CLSID_NullRenderer);
-    hr = pBuilder->AddFilter(pNull, L"Renderer");
+    hr = pGraphBuilder->AddFilter(pNull, L"Renderer");
 
     // Get the other input and output pins, and connect them.
-    IPin *pGrabOut = GetOutPin(pGrab, 0);
+    IPin *pGrabOut = GetOutPin(pSampleGrabber, 0);
     IPin *pNullIn = GetInPin(pNull, 0);
-    hr = pBuilder->Connect(pGrabOut, pNullIn);
+    hr = pGraphBuilder->Connect(pGrabOut, pNullIn);
 
     // Show the graph in the debug output.
-    DumpGraph(pGraph, 0);
+    DumpGraph(pFilterGraph, 0);
 
     // Note: The graph is built, but we do not know the format yet.
     // To find the format, call GetConnectedMediaType. For this example,
     // we just write some information to the debug window.
-
     REFERENCE_TIME Duration = 0;
     hr = pSeeking->GetDuration(&Duration);
     BOOL Paused = FALSE;
@@ -88,7 +87,7 @@ int get_data_test(int argc, char* argv[]) {
         // Seek the graph.
         REFERENCE_TIME Seek = Duration * i / 100;
         hr = pSeeking->SetPositions(&Seek, AM_SEEKING_AbsolutePositioning,
-            NULL, AM_SEEKING_NoPositioning );
+                                    NULL, AM_SEEKING_NoPositioning );
 
         // Pause the graph, if it is not paused yet.
         if( !Paused ) {
@@ -103,7 +102,7 @@ int get_data_test(int argc, char* argv[]) {
 
     long t2 = timeGetTime();
     DbgLog((LOG_TRACE, 0, "Frames per second = %ld", i * 1000/(t2 - t1)));
-    pGrab->Release();
+    pSampleGrabber->Release();
     return 0;
 }
 

@@ -14,11 +14,8 @@ CTransformFilter::CTransformFilter(__in_opt LPCTSTR pName,
                                    __inout_opt LPUNKNOWN pUnk,
                                    REFCLSID  clsid) :
     CBaseFilter(pName,pUnk,&m_csFilter, clsid),
-    m_pInput(NULL),
-    m_pOutput(NULL),
-    m_bEOSDelivered(FALSE),
-    m_bQualityChanged(FALSE),
-    m_bSampleSkipped(FALSE) {
+    m_pInput(NULL), m_pOutput(NULL), m_bEOSDelivered(FALSE),
+    m_bQualityChanged(FALSE), m_bSampleSkipped(FALSE) {
 #ifdef PERF
     RegisterPerfId();
 #endif

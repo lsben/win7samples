@@ -255,32 +255,20 @@
 #include <measure.h>
 #include <transip.h>
 
-CTransInPlaceFilter::CTransInPlaceFilter
-   ( __in_opt LPCTSTR    pName,
-     __inout_opt LPUNKNOWN  pUnk,
-     REFCLSID   clsid,
-     __inout HRESULT   *phr,
-     bool       bModifiesData
-   )
-   : CTransformFilter(pName, pUnk, clsid),
-     m_bModifiesData(bModifiesData)
-{
+CTransInPlaceFilter::CTransInPlaceFilter(
+        __in_opt LPCTSTR pName, __inout_opt LPUNKNOWN pUnk,
+        REFCLSID   clsid, __inout HRESULT   *phr, bool bModifiesData)
+    : CTransformFilter(pName, pUnk, clsid), m_bModifiesData(bModifiesData) {
 #ifdef PERF
     RegisterPerfId();
 #endif
 }
 
 #ifdef UNICODE
-CTransInPlaceFilter::CTransInPlaceFilter
-   ( __in_opt LPCSTR  pName,
-     __inout_opt LPUNKNOWN  pUnk,
-     REFCLSID   clsid,
-     __inout HRESULT   *phr,
-     bool       bModifiesData
-   )
-   : CTransformFilter(pName, pUnk, clsid),
-     m_bModifiesData(bModifiesData)
-{
+CTransInPlaceFilter::CTransInPlaceFilter(
+        __in_opt LPCSTR  pName, __inout_opt LPUNKNOWN  pUnk,
+        REFCLSID clsid, __inout HRESULT *phr, bool bModifiesData)
+    : CTransformFilter(pName, pUnk, clsid), m_bModifiesData(bModifiesData) {
 #ifdef PERF
     RegisterPerfId();
 #endif

@@ -14,11 +14,8 @@
 /* Helper class that derived pin objects can use to compare media
    types etc. Has same data members as the struct AM_MEDIA_TYPE defined
    in the streams IDL file, but also has (non-virtual) functions */
-
 class CMediaType : public _AMMediaType {
-
 public:
-
     ~CMediaType();
     CMediaType();
     CMediaType(const GUID * majortype);
@@ -68,22 +65,23 @@ public:
     BOOL IsPartiallySpecified(void) const;
 };
 
-
 /* General purpose functions to copy and delete a task allocated AM_MEDIA_TYPE
    structure which is useful when using the IEnumMediaFormats interface as
    the implementation allocates the structures which you must later delete */
 
-void WINAPI DeleteMediaType(__inout_opt AM_MEDIA_TYPE *pmt);
-AM_MEDIA_TYPE * WINAPI CreateMediaType(AM_MEDIA_TYPE const *pSrc);
-HRESULT WINAPI CopyMediaType(__out AM_MEDIA_TYPE *pmtTarget, const AM_MEDIA_TYPE *pmtSource);
+AM_MEDIA_TYPE * WINAPI CreateMediaType(AM_MEDIA_TYPE const* pSrc);
+
+HRESULT WINAPI CopyMediaType(__out AM_MEDIA_TYPE* pmtTarget,
+                             const AM_MEDIA_TYPE* pmtSource);
+
 void WINAPI FreeMediaType(__inout AM_MEDIA_TYPE& mt);
 
-//  Initialize a media type from a WAVEFORMATEX
+void WINAPI DeleteMediaType(__inout_opt AM_MEDIA_TYPE* pmt);
 
-STDAPI CreateAudioMediaType(
-    const WAVEFORMATEX *pwfx,
-    __out AM_MEDIA_TYPE *pmt,
-    BOOL bSetFormat);
+//  Initialize a media type from a WAVEFORMATEX
+STDAPI CreateAudioMediaType(const WAVEFORMATEX *pwfx,
+                            __out AM_MEDIA_TYPE *pmt,
+                            BOOL bSetFormat);
 
 #endif /* __MTYPE__ */
 

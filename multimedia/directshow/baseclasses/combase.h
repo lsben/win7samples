@@ -154,12 +154,9 @@ typedef INonDelegatingUnknown *PNDUNKNOWN;
    derivation list during construction as you cannot call virtual functions
    in the constructor. The downside of all this is that every single object
    constructor has to take an object name parameter that describes it */
-
 class CBaseObject
 {
-
 private:
-
     // Disable the copy constructor and assignment by default so you will get
     //   compiler errors instead of unexpected behaviour if you pass objects
     //   by value or assign objects.
@@ -174,11 +171,8 @@ protected:
     DWORD m_dwCookie;           /* Cookie identifying this object */
 #endif
 
-
 public:
-
     /* These increment and decrement the number of active objects */
-
     CBaseObject(__in_opt LPCTSTR pName);
 #ifdef UNICODE
     CBaseObject(__in_opt LPCSTR pName);
@@ -186,7 +180,6 @@ public:
     ~CBaseObject();
 
     /* Call this to find if there are any CUnknown derived objects active */
-
     static LONG ObjectsActive() {
         return m_cObjects;
     };
@@ -196,9 +189,7 @@ public:
 /* An object that supports one or more COM interfaces will be based on
    this class. It supports counting of total objects for DLLCanUnloadNow
    support, and an implementation of the core non delegating IUnknown */
-
-class AM_NOVTABLE CUnknown : public INonDelegatingUnknown,
-                 public CBaseObject
+class AM_NOVTABLE CUnknown : public INonDelegatingUnknown, public CBaseObject
 {
 private:
     const LPUNKNOWN m_pUnknown; /* Owner of this object */
@@ -207,7 +198,6 @@ protected:                      /* So we can override NonDelegatingRelease() */
     volatile LONG m_cRef;       /* Number of reference counts */
 
 public:
-
     CUnknown(__in_opt LPCTSTR pName, __in_opt LPUNKNOWN pUnk);
     virtual ~CUnknown() {};
 
@@ -219,8 +209,6 @@ public:
     CUnknown(__in_opt LPCSTR pName, __in_opt LPUNKNOWN pUnk,__inout_opt HRESULT *phr);
 #endif
 
-    /* Return the owner of this object */
-
     LPUNKNOWN GetOwner() const {
         return m_pUnknown;
     };
@@ -231,7 +219,6 @@ public:
     /* static CUnknown *CreateInstance(LPUNKNOWN, HRESULT *) */
 
     /* Non delegating unknown implementation */
-
     STDMETHODIMP NonDelegatingQueryInterface(REFIID, __deref_out void **);
     STDMETHODIMP_(ULONG) NonDelegatingAddRef();
     STDMETHODIMP_(ULONG) NonDelegatingRelease();
@@ -239,11 +226,9 @@ public:
 
 /* Return an interface pointer to a requesting client
    performing a thread safe AddRef as necessary */
-
 STDAPI GetInterface(LPUNKNOWN pUnk, __out void **ppv);
 
 /* A function that can create a new COM object */
-
 typedef CUnknown *(CALLBACK *LPFNNewCOMObject)(__in_opt LPUNKNOWN pUnkOuter, __inout_opt HRESULT *phr);
 
 /*  A function (can be NULL) which is called from the DLL entrypoint

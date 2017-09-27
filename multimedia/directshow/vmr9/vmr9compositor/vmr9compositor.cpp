@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 // vmr9compositor.cpp : Defines the entry point for the application.
-// 
+//
 // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 // ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
 // THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
@@ -144,7 +144,7 @@ HRESULT ConfigureVMR9(HWND window)
     FAIL_RET( CoCreateInstance(CLSID_VideoMixingRenderer9, NULL, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&g_filter) );
 
     // Configure the VMR-9.
-    // Set the maximum number of video streams, and set windowless mode. 
+    // Set the maximum number of video streams, and set windowless mode.
     FAIL_RET( g_filter->QueryInterface(IID_IVMRFilterConfig9, reinterpret_cast<void**>(&filterConfig)) );
 
     FAIL_RET( filterConfig->SetNumberOfStreams( MAX_VIDEO_STREAMS ) );
@@ -181,7 +181,7 @@ HRESULT StartGraph(HWND window)
 
     ofn.lStructSize         = sizeof(OPENFILENAME);
     ofn.hwndOwner           = g_hWnd;
-    ofn.lpstrFilter         = TEXT("Video Files (.AVI, .MPG, .MPEG, .VOB, .WMV)\0*.AVI;*.MPG;*.MPEG;*.VOB;*.WMV\0") 
+    ofn.lpstrFilter         = TEXT("Video Files (.AVI, .MPG, .MPEG, .VOB, .WMV)\0*.AVI;*.MPG;*.MPEG;*.VOB;*.WMV\0")
                               TEXT("All Files (*.*)\0*.*\0\0");
     ofn.nFilterIndex        = 1;
     ofn.lpstrFile           = selectList.BufferPtr();
@@ -189,7 +189,7 @@ HRESULT StartGraph(HWND window)
     ofn.lpstrTitle          = TEXT("Select a video file to play...");
     ofn.Flags               = OFN_HIDEREADONLY | OFN_ALLOWMULTISELECT | OFN_FILEMUSTEXIST | OFN_EXPLORER;
     ofn.lpstrDefExt         = TEXT("AVI");
-    
+
     // Launch the Open File dialog.
 	DWORD result = GetOpenFileName(&ofn);
 
@@ -219,7 +219,8 @@ HRESULT StartGraph(HWND window)
     g_graph                 = NULL;
 
     // Create the Filter Graph Manager.
-    FAIL_RET( CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER, IID_IGraphBuilder, (void**)&g_graph) );
+    FAIL_RET( CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER,
+                               IID_IGraphBuilder, (void**)&g_graph) );
 
     // Configure the VMR-9.
     FAIL_RET( ConfigureVMR9(window) );

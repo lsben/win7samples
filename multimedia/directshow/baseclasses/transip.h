@@ -31,7 +31,6 @@ class CTransInPlaceFilter;
 // functions in CTransInPlaceFilter.  If that's not enough and you want
 // to derive your own pin class, override GetPin in the filter to supply
 // your own pin classes to the filter.
-
 class CTransInPlaceInputPin : public CTransformInputPin
 {
 protected:
@@ -117,27 +116,27 @@ class AM_NOVTABLE CTransInPlaceFilter : public CTransformFilter
 public:
     // map getpin/getpincount for base enum of pins to owner
     // override this to return more specialised pin objects
-
     virtual CBasePin *GetPin(int n);
 
 public:
     //  Set bModifiesData == false if your derived filter does
     //  not modify the data samples (for instance it's just copying
     //  them somewhere else or looking at the timestamps).
-    CTransInPlaceFilter(__in_opt LPCTSTR, __inout_opt LPUNKNOWN, REFCLSID clsid, __inout HRESULT *,
-                        bool bModifiesData = true);
+    CTransInPlaceFilter(__in_opt LPCTSTR, __inout_opt LPUNKNOWN, REFCLSID clsid,
+                        __inout HRESULT *, bool bModifiesData = true);
 #ifdef UNICODE
-    CTransInPlaceFilter(__in_opt LPCSTR, __inout_opt LPUNKNOWN, REFCLSID clsid, __inout HRESULT *,
-                        bool bModifiesData = true);
+    CTransInPlaceFilter(__in_opt LPCSTR, __inout_opt LPUNKNOWN, REFCLSID clsid,
+                        __inout HRESULT *, bool bModifiesData = true);
 #endif
     // The following are defined to avoid undefined pure virtuals.
     // Even if they are never called, they will give linkage warnings/errors
 
     // We override EnumMediaTypes to bypass the transform class enumerator
     // which would otherwise call this.
-    HRESULT GetMediaType(int iPosition, __inout CMediaType *pMediaType) {   DbgBreak("CTransInPlaceFilter::GetMediaType should never be called");
-            return E_UNEXPECTED;
-        }
+    HRESULT GetMediaType(int iPosition, __inout CMediaType *pMediaType) {
+        DbgBreak("CTransInPlaceFilter::GetMediaType should never be called");
+        return E_UNEXPECTED;
+    }
 
     // This is called when we actually have to provide our own allocator.
     HRESULT DecideBufferSize(IMemAllocator*, __inout ALLOCATOR_PROPERTIES *);

@@ -86,7 +86,7 @@ BOOL APIENTRY DllMain(HANDLE hModule,
 }
 
 // Provide the way for COM to create a CSampleGrabber object
-CUnknown * WINAPI CSampleGrabber::CreateInstance(LPUNKNOWN punk, HRESULT *phr) {
+CUnknown* WINAPI CSampleGrabber::CreateInstance(LPUNKNOWN punk, HRESULT *phr) {
     ASSERT(phr);
 
     // assuming we don't want to modify the data
@@ -106,8 +106,8 @@ CSampleGrabber::CSampleGrabber(IUnknown* pOuter, HRESULT* phr,
                           CLSID_GrabberSample, phr, (BOOL)ModifiesData),
       m_callback(NULL) {
     // this is used to override the input pin with our own
-    m_pInput = (CTransInPlaceInputPin*) new CSampleGrabberInPin( this, phr );
-    if( !m_pInput ) {
+    m_pInput = (CTransInPlaceInputPin*) new CSampleGrabberInPin(this, phr);
+    if(!m_pInput) {
         if (phr)
             *phr = E_OUTOFMEMORY;
     }
@@ -134,36 +134,36 @@ STDMETHODIMP CSampleGrabber::NonDelegatingQueryInterface( REFIID riid, void ** p
 // app will be dealing with in the sample grabber's callback. For instance,
 // if you don't enforce right-side-up video in this call, you may not get
 // right-side-up video in your callback. It all depends on what you do here.
-HRESULT CSampleGrabber::CheckInputType( const CMediaType * pmt ) {
+HRESULT CSampleGrabber::CheckInputType(const CMediaType* pmt) {
     CheckPointer(pmt,E_POINTER);
-    CAutoLock lock( &m_Lock );
+    CAutoLock lock(&m_Lock);
 
     // if the major type is not set, then accept anything
     GUID g = *m_mtAccept.Type( );
-    if( g == GUID_NULL ) {
+    if(g == GUID_NULL) {
         return NOERROR;
     }
 
     // if the major type is set, don't accept anything else
-    if( g != *pmt->Type( ) ) {
+    if(g != *pmt->Type( )) {
         return VFW_E_INVALID_MEDIA_TYPE;
     }
 
     // subtypes must match, if set. if not set, accept anything
     g = *m_mtAccept.Subtype( );
-    if( g == GUID_NULL ) {
+    if(g == GUID_NULL) {
         return NOERROR;
     }
-    if( g != *pmt->Subtype( ) ) {
+    if(g != *pmt->Subtype( )) {
         return VFW_E_INVALID_MEDIA_TYPE;
     }
 
     // format types must match, if one is set
     g = *m_mtAccept.FormatType( );
-    if( g == GUID_NULL ) {
+    if(g == GUID_NULL) {
         return NOERROR;
     }
-    if( g != *pmt->FormatType( ) ) {
+    if(g != *pmt->FormatType( )) {
         return VFW_E_INVALID_MEDIA_TYPE;
     }
     // at this point, for this sample code, this is good enough,
@@ -174,14 +174,14 @@ HRESULT CSampleGrabber::CheckInputType( const CMediaType * pmt ) {
 // This bit is almost straight out of the base classes.
 // We override this so we can handle Transform( )'s error
 // result differently.
-HRESULT CSampleGrabber::Receive( IMediaSample * pms ) {
+HRESULT CSampleGrabber::Receive(IMediaSample* pms) {
     CheckPointer(pms,E_POINTER);
 
     HRESULT hr;
-    AM_SAMPLE2_PROPERTIES * const pProps = m_pInput->SampleProps();
+    AM_SAMPLE2_PROPERTIES* const pProps = m_pInput->SampleProps();
 
     if (pProps->dwStreamId != AM_STREAM_MEDIA) {
-        if( m_pOutput->IsConnected() )
+        if(m_pOutput->IsConnected())
             return m_pOutput->Deliver(pms);
         else
             return NOERROR;
@@ -215,20 +215,20 @@ HRESULT CSampleGrabber::Receive( IMediaSample * pms ) {
     return hr;
 }
 
-HRESULT CSampleGrabber::Transform ( IMediaSample * pms ) {
+HRESULT CSampleGrabber::Transform (IMediaSample* pms) {
     CheckPointer(pms,E_POINTER);
-    CAutoLock lock( &m_Lock );
+    CAutoLock lock(&m_Lock);
 
-    if( m_callback ) {
+    if(m_callback) {
         REFERENCE_TIME StartTime, StopTime;
         pms->GetTime( &StartTime, &StopTime);
 
         StartTime += m_pInput->CurrentStartTime( );
         StopTime  += m_pInput->CurrentStartTime( );
 
-        BOOL * pTypeChanged = &((CSampleGrabberInPin*) m_pInput)->m_bMediaTypeChanged;
+        BOOL* pTypeChanged = &((CSampleGrabberInPin*) m_pInput)->m_bMediaTypeChanged;
 
-        HRESULT hr = m_callback( pms, &StartTime, &StopTime, *pTypeChanged );
+        HRESULT hr = m_callback(pms, &StartTime, &StopTime, *pTypeChanged);
 
         *pTypeChanged = FALSE; // now that we notified user, we can clear it
         return hr;
@@ -236,26 +236,24 @@ HRESULT CSampleGrabber::Transform ( IMediaSample * pms ) {
     return NOERROR;
 }
 
-STDMETHODIMP CSampleGrabber::SetAcceptedMediaType( const CMediaType * pmt ) {
-    CAutoLock lock( &m_Lock );
-    if( !pmt ) {
+STDMETHODIMP CSampleGrabber::SetAcceptedMediaType(const CMediaType* pMediaType) {
+    CAutoLock lock(&m_Lock);
+    if(!pMediaType) {
         m_mtAccept = CMediaType( );
         return NOERROR;
     }
-    HRESULT hr;
-    hr = CopyMediaType( &m_mtAccept, pmt );
-    return hr;
+    return CopyMediaType(&m_mtAccept, pMediaType);
 }
 
-STDMETHODIMP CSampleGrabber::GetConnectedMediaType( CMediaType * pmt ) {
-    if( !m_pInput || !m_pInput->IsConnected( ) ) {
+STDMETHODIMP CSampleGrabber::GetConnectedMediaType(CMediaType* pmt) {
+    if(!m_pInput || !m_pInput->IsConnected( )) {
         return VFW_E_NOT_CONNECTED;
     }
-    return m_pInput->ConnectionMediaType( pmt );
+    return m_pInput->ConnectionMediaType(pmt);
 }
 
-STDMETHODIMP CSampleGrabber::SetCallback( SAMPLECALLBACK Callback ) {
-    CAutoLock lock( &m_Lock );
+STDMETHODIMP CSampleGrabber::SetCallback(SAMPLECALLBACK Callback) {
+    CAutoLock lock(&m_Lock);
     m_callback = Callback;
     return NOERROR;
 }
@@ -263,22 +261,23 @@ STDMETHODIMP CSampleGrabber::SetCallback( SAMPLECALLBACK Callback ) {
 
 // inform the input pin of the allocator buffer we wish to use. See the
 // input pin's SetDeliverBuffer method for comments.
-STDMETHODIMP CSampleGrabber::SetDeliveryBuffer( ALLOCATOR_PROPERTIES props, BYTE * m_pBuffer ) {
+STDMETHODIMP CSampleGrabber::SetDeliveryBuffer(ALLOCATOR_PROPERTIES props,
+                                               BYTE* m_pBuffer) {
     // have the input/output pins been created?
-    if( !InputPin( ) || !OutputPin( ) ) {
+    if(!InputPin( ) || !OutputPin( )) {
         return E_POINTER;
     }
     // they can't be connected if we're going to be changing delivery buffers
-    if( InputPin( )->IsConnected( ) || OutputPin( )->IsConnected( ) ) {
+    if(InputPin( )->IsConnected( ) || OutputPin( )->IsConnected( )) {
         return E_INVALIDARG;
     }
-    return ((CSampleGrabberInPin*)m_pInput)->SetDeliveryBuffer( props, m_pBuffer );
+    return ((CSampleGrabberInPin*)m_pInput)->SetDeliveryBuffer(props, m_pBuffer);
 }
 
 // used to help speed input pin connection times. We return a partially
 // specified media type - only the main type is specified. If we return
 // anything BUT a major type, some codecs written improperly will crash
-HRESULT CSampleGrabberInPin::GetMediaType( int iPosition, CMediaType * pMediaType ) {
+HRESULT CSampleGrabberInPin::GetMediaType(int iPosition, CMediaType* pMediaType) {
     CheckPointer(pMediaType,E_POINTER);
     if (iPosition < 0) {
         return E_INVALIDARG;
@@ -287,7 +286,7 @@ HRESULT CSampleGrabberInPin::GetMediaType( int iPosition, CMediaType * pMediaTyp
         return VFW_S_NO_MORE_ITEMS;
     }
     *pMediaType = CMediaType( );
-    pMediaType->SetType( ((CSampleGrabber*)m_pFilter)->m_mtAccept.Type( ) );
+    pMediaType->SetType(((CSampleGrabber*)m_pFilter)->m_mtAccept.Type( ));
     return S_OK;
 }
 
@@ -295,53 +294,53 @@ HRESULT CSampleGrabberInPin::GetMediaType( int iPosition, CMediaType * pMediaTyp
 // if the input pin is disconnected. This will allow GetMediaType to be
 // called. If we didn't do this, EnumMediaTypes returns a failure code
 // and GetMediaType is never called.
-STDMETHODIMP CSampleGrabberInPin::EnumMediaTypes( IEnumMediaTypes **ppEnum ) {
+STDMETHODIMP CSampleGrabberInPin::EnumMediaTypes(IEnumMediaTypes **ppEnum) {
     CheckPointer(ppEnum,E_POINTER);
     ValidateReadWritePtr(ppEnum,sizeof(IEnumMediaTypes *));
 
     // if the output pin isn't connected yet, offer the possibly
     // partially specified media type that has been set by the user
 
-    if( !((CSampleGrabber*)m_pTIPFilter)->OutputPin( )->IsConnected() ) {
+    if(!((CSampleGrabber*)m_pTIPFilter)->OutputPin( )->IsConnected()) {
         // Create a new reference counted enumerator
-        *ppEnum = new CEnumMediaTypes( this, NULL );
+        *ppEnum = new CEnumMediaTypes(this, NULL);
         return (*ppEnum) ? NOERROR : E_OUTOFMEMORY;
     }
     // if the output pin is connected, offer it's fully qualified media type
-    return ((CSampleGrabber*)m_pTIPFilter)->OutputPin( )->GetConnected()->EnumMediaTypes( ppEnum );
+    return ((CSampleGrabber*)m_pTIPFilter)->OutputPin()->GetConnected()->EnumMediaTypes( ppEnum);
 }
 
-STDMETHODIMP CSampleGrabberInPin::NotifyAllocator( IMemAllocator *pAllocator, BOOL bReadOnly ) {
-    if( m_pPrivateAllocator ) {
-        if( pAllocator != m_pPrivateAllocator ) {
+STDMETHODIMP CSampleGrabberInPin::NotifyAllocator(IMemAllocator *pAllocator, BOOL bReadOnly) {
+    if(m_pPrivateAllocator) {
+        if(pAllocator != m_pPrivateAllocator) {
             return E_FAIL;
         } else {
             // if the upstream guy wants to be read only and we don't, then that's bad
             // if the upstream guy doesn't request read only, but we do, that's okay
-            if( bReadOnly && !SampleGrabber( )->IsReadOnly( ) ) {
+            if(bReadOnly && !SampleGrabber( )->IsReadOnly( )) {
                 return E_FAIL;
             }
         }
     }
-    return CTransInPlaceInputPin::NotifyAllocator( pAllocator, bReadOnly );
+    return CTransInPlaceInputPin::NotifyAllocator(pAllocator, bReadOnly);
 }
 
-STDMETHODIMP CSampleGrabberInPin::GetAllocator( IMemAllocator **ppAllocator ) {
-    if( m_pPrivateAllocator ) {
+STDMETHODIMP CSampleGrabberInPin::GetAllocator(IMemAllocator **ppAllocator) {
+    if(m_pPrivateAllocator) {
         CheckPointer(ppAllocator,E_POINTER);
 
         *ppAllocator = m_pPrivateAllocator;
         m_pPrivateAllocator->AddRef( );
         return NOERROR;
     } else {
-        return CTransInPlaceInputPin::GetAllocator( ppAllocator );
+        return CTransInPlaceInputPin::GetAllocator(ppAllocator);
     }
 }
 
 // GetAllocatorRequirements: The upstream filter calls this to get our
 // filter's allocator requirements. If the app has set the buffer, then
 // we return those props. Otherwise, we use the default TransInPlace behavior.
-HRESULT CSampleGrabberInPin::GetAllocatorRequirements( ALLOCATOR_PROPERTIES *pProps ) {
+HRESULT CSampleGrabberInPin::GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps) {
     CheckPointer(pProps,E_POINTER);
     if (m_pPrivateAllocator) {
         *pProps = m_allocprops;
@@ -351,12 +350,13 @@ HRESULT CSampleGrabberInPin::GetAllocatorRequirements( ALLOCATOR_PROPERTIES *pPr
     }
 }
 
-HRESULT CSampleGrabberInPin::SetDeliveryBuffer( ALLOCATOR_PROPERTIES props, BYTE * pBuffer ) {
+HRESULT CSampleGrabberInPin::SetDeliveryBuffer(ALLOCATOR_PROPERTIES props,
+                                               BYTE* pBuffer) {
     // don't allow more than one buffer
-    if( props.cBuffers != 1 ) {
+    if(props.cBuffers != 1) {
         return E_INVALIDARG;
     }
-    if( !pBuffer ) {
+    if(!pBuffer) {
         return E_POINTER;
     }
     m_allocprops = props;
@@ -370,17 +370,17 @@ HRESULT CSampleGrabberInPin::SetDeliveryBuffer( ALLOCATOR_PROPERTIES props, BYTE
     }
     HRESULT hr = S_OK;
 
-    m_pPrivateAllocator = new CSampleGrabberAllocator( this, &hr );
-    if( !m_pPrivateAllocator ) {
+    m_pPrivateAllocator = new CSampleGrabberAllocator(this, &hr);
+    if(!m_pPrivateAllocator) {
         return E_OUTOFMEMORY;
     }
     m_pPrivateAllocator->AddRef( );
     return hr;
 }
 
-HRESULT CSampleGrabberInPin::SetMediaType( const CMediaType *pmt ) {
+HRESULT CSampleGrabberInPin::SetMediaType(const CMediaType *pmt) {
     m_bMediaTypeChanged = TRUE;
-    return CTransInPlaceInputPin::SetMediaType( pmt );
+    return CTransInPlaceInputPin::SetMediaType(pmt);
 }
 
 // don't allocate the memory, just use the buffer the app provided
