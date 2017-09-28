@@ -3,6 +3,9 @@
 #include <windows.h>
 #include <strsafe.h>
 
+#include <string>
+#include <stdexcept>
+
 // Return the name of the COM DLL associated with a given CLSID string.
 // The CLSID string must be in canonical form.
 inline HRESULT GetFilenameByCLSIDString(const WCHAR *szGUID, WCHAR *szFile,
@@ -83,10 +86,10 @@ LONG_PTR _SetWindowLongPtr(HWND hwnd, int nIndex, T p) {
 #endif // definition of IID_PPV_ARGS required as it's not in the new tree yet.
 
 
-#define CHECK_HR_THROW(hr) do {                                 \
-        if (FAILED(hr)) {                                       \
-            throw RuntimeError("Fail: " + std::to_string(hr));  \
-        }                                                       \
+#define CHECK_HR_THROW(hr) do {                                         \
+        if (FAILED(hr)) {                                               \
+            throw std::runtime_error("Fail: " + std::to_string(hr));    \
+        }                                                               \
     } while(false);
 
 #define CHECK_HR_RETURN(hr) do {                                \

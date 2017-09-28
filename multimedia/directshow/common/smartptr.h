@@ -60,9 +60,12 @@ public:
     SmartPtr() : m_ptr(NULL) { }
     SmartPtr(const SmartPtr& sptr) {
         m_ptr = sptr.m_ptr;
-        if (m_ptr) {
-            m_ptr->AddRef();
-        }
+        if (m_ptr) { m_ptr->AddRef(); }
+    }
+
+    SmartPtr(T* ptr) {
+        m_ptr = ptr;
+        if (m_ptr) { m_ptr->AddRef(); }
     }
 
     ~SmartPtr() {
@@ -97,7 +100,7 @@ public:
 
     HRESULT CoCreateInstance(REFCLSID clsid, LPUNKNOWN pUnkOuter = NULL,
                              DWORD dwClsContext = CLSCTX_INPROC_SERVER) {
-        return CoCreateInstance(
+        return ::CoCreateInstance(
                 clsid, pUnkOuter, dwClsContext, __uuidof(T),
                 reinterpret_cast<PVOID *>(m_ptr));
     }
