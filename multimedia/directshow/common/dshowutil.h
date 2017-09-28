@@ -21,6 +21,8 @@
 #include <strsafe.h>
 #include <assert.h>
 
+#include "utils.h"
+
 #ifndef ASSERT
 #define ASSERT assert
 #endif
@@ -587,9 +589,8 @@ HRESULT FindMatchingPin(IBaseFilter *pFilter, PinPred FN, IPin **ppPin) {
 // Name: FindPinByIndex
 // Desc: Return the Nth pin with the specified pin direction.
 ///////////////////////////////////////////////////////////////////////
-
 inline HRESULT FindPinByIndex(IBaseFilter *pFilter, PIN_DIRECTION PinDir,
-	UINT nIndex, IPin **ppPin) {
+                              UINT nIndex, IPin **ppPin) {
 	if (!pFilter || !ppPin) {
 		return E_POINTER;
 	}
@@ -2360,3 +2361,19 @@ done:
 }
 
 
+// -----------------------------------------------------------------------------
+// msw here
+
+IPin* GetOutPin(IBaseFilter* pFilter, UINT index) {
+    IPin* pPin;
+    HRESULT hr = FindPinByIndex(pFilter, PINDIR_OUTPUT, index, &pPin);
+    CHECK_HR_THROW(hr);
+    return pPin;
+}
+
+IPin* GetInPin(IBaseFilter* pFilter, UINT index) {
+    IPin* pPin;
+    HRESULT hr = FindPinByIndex(pFilter, PINDIR_INPUT, index, &pPin);
+    CHECK_HR_THROW(hr);
+    return pPin;
+}

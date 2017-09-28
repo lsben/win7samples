@@ -1,7 +1,8 @@
 // Hi-lock: (("\\_<\\(AddRef\\|Release\\|QueryInterface\\)\\_>(" (1 'underline prepend)))
+//
 // SmartPtr.h
 //
-// A smart pointer class that does not depend on any ATL headers
+// A [COM] smart pointer class that does not depend on any ATL headers
 
 #pragma once
 
@@ -44,7 +45,13 @@ private:
     STDMETHOD_(ULONG, Release)() = 0;
 };
 
-// msw: T is a COM type, presumably derived from IUnknown. IUnknown is
+// msw:
+//
+// SmartPtr is similar to, but not quite drop-in replacement for,
+// CComPtr. Differences: SmartPtr lacked a CoCreateInstance() method [until
+// now], but it has its own QueryInterface() method [good].
+//
+// T is a COM type, presumably derived from IUnknown. IUnknown is
 // reference-counted, so the only thing this class is responsible for is calling
 // Release() and delegating QueryInterface().
 template <class T> class SmartPtr
@@ -88,10 +95,21 @@ public:
         return m_ptr;
     }
 
+    HRESULT CoCreateInstance(REFCLSID clsid, LPUNKNOWN pUnkOuter = NULL,
+                             DWORD dwClsContext = CLSCTX_INPROC_SERVER) {
+        return CoCreateInstance(
+                clsid, pUnkOuter, dwClsContext, __uuidof(T),
+                reinterpret_cast<PVOID *>(m_ptr));
+    }
+
     // Templated version of QueryInterface. Q is another interface type.
     template <class Q>
     HRESULT QueryInterface(Q **ppQ) {
-        return m_ptr->QueryInterface(__uuidof(Q), (void**)ppQ);
+        return m_ptr->QueryInterface(
+            __uuidof(Q),
+            (static_cast<IUnknown*>(*(ppQ)), reinterpret_cast<void**>(ppQ)));
+        // I guess the first part in the comma expression is a sanity check;
+        // only the second is actually passed on.
     }
 
     ULONG Release() {

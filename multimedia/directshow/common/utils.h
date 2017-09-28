@@ -5,73 +5,48 @@
 
 // Return the name of the COM DLL associated with a given CLSID string.
 // The CLSID string must be in canonical form.
-inline HRESULT GetFilenameByCLSIDString(const WCHAR *szGUID, WCHAR *szFile, size_t cch)
-{
+inline HRESULT GetFilenameByCLSIDString(const WCHAR *szGUID, WCHAR *szFile,
+                                        size_t cch) {
     HRESULT hr;
-
 	const DWORD STR_LEN = 512;
-
 	WCHAR szKey[STR_LEN];
-
-
 	int rc=0;
 
 	// Create key name for reading filename from registry
-	hr = StringCchPrintf(
-		szKey, 
-		STR_LEN, 
-		L"Software\\Classes\\CLSID\\%s\\InprocServer32\0",
-		szGUID);
-
-	if (SUCCEEDED(hr))
-	{
-
+	hr = StringCchPrintf(szKey, STR_LEN,
+                         L"Software\\Classes\\CLSID\\%s\\InprocServer32\0",
+                         szGUID);
+	if (SUCCEEDED(hr)) {
         HKEY hkeyFilter=0;
         DWORD dwSize=MAX_PATH;
         BYTE szFilename[MAX_PATH];
 
         // Open the CLSID key that contains information about the filter
         rc = RegOpenKey(HKEY_LOCAL_MACHINE, szKey, &hkeyFilter);
-        if (rc == ERROR_SUCCESS)
-        {
+        if (rc == ERROR_SUCCESS) {
             rc = RegQueryValueEx(hkeyFilter, NULL,  // Read (Default) value
                                  NULL, NULL, szFilename, &dwSize);
-           
-            if (rc == ERROR_SUCCESS)
-			{
+            if (rc == ERROR_SUCCESS) {
                 hr = StringCchPrintf(szFile, cch, L"%s\0", szFilename);
-			}
-			else
-			{
+			} else {
 				hr = E_FAIL;
 			}
             RegCloseKey(hkeyFilter);
-        }
-		else
-		{
+        } else {
 			hr = E_FAIL;
 		}
-
     }
 	return hr;
 }
 
-
 // Return the name of the COM DLL associated with a given CLSID.
 // (Same as above, but takes a CLSID instead of a string.)
-inline HRESULT GetFilenameByCLSID(const GUID *pGUID, WCHAR *szFile, size_t cch)
-{
+inline HRESULT GetFilenameByCLSID(const GUID *pGUID, WCHAR *szFile, size_t cch) {
 	const DWORD GUID_STR_LEN = 40;
-
 	WCHAR szGUID[GUID_STR_LEN];
-
-
-	if (0 == StringFromGUID2(*pGUID, szGUID, GUID_STR_LEN))
-	{
+	if (0 == StringFromGUID2(*pGUID, szGUID, GUID_STR_LEN)) {
 		return E_FAIL;
-	}
-	else
-	{
+	} else {
 		return GetFilenameByCLSIDString(szGUID, szFile, cch);
 	}
 }
@@ -85,18 +60,38 @@ inline HRESULT GetFilenameByCLSID(const GUID *pGUID, WCHAR *szFile, size_t cch)
 // _GetWindowLongPtr
 // Templated version of GetWindowLongPtr, to suppress spurious compiler warning.
 template <class T>
-T _GetWindowLongPtr(HWND hwnd, int nIndex)
-{
+T _GetWindowLongPtr(HWND hwnd, int nIndex) {
     return (T)GetWindowLongPtr(hwnd, nIndex);
 }
 
 // _SetWindowLongPtr
 // Templated version of SetWindowLongPtr, to suppress spurious compiler warning.
 template <class T>
-LONG_PTR _SetWindowLongPtr(HWND hwnd, int nIndex, T p)
-{
+LONG_PTR _SetWindowLongPtr(HWND hwnd, int nIndex, T p) {
     return SetWindowLongPtr(hwnd, nIndex, (LONG_PTR)p);
 }
 #pragma warning(pop)
 
 #endif
+
+
+// -----------------------------------------------------------------------------
+// msw: Stoled from winbase/imapi/imapi2sample/common.h
+#ifndef IID_PPV_ARGS
+#define IID_PPV_ARGS(ppType) __uuidof(**(ppType)),                             \
+        (static_cast<IUnknown *>(*(ppType)),reinterpret_cast<void**>(ppType))
+#endif // definition of IID_PPV_ARGS required as it's not in the new tree yet.
+
+
+#define CHECK_HR_THROW(hr) do {                                 \
+        if (FAILED(hr)) {                                       \
+            throw RuntimeError("Fail: " + std::to_string(hr));  \
+        }                                                       \
+    } while(false);
+
+#define CHECK_HR_RETURN(hr) do {                                \
+        if (FAILED(hr)) {                                       \
+            return hr;                                          \
+        }                                                       \
+    } while(false);
+
