@@ -252,7 +252,7 @@ STDMETHODIMP CSampleGrabber::GetConnectedMediaType(CMediaType* pmt) {
     return m_pInput->ConnectionMediaType(pmt);
 }
 
-STDMETHODIMP CSampleGrabber::SetCallback(SAMPLECALLBACK Callback) {
+STDMETHODIMP CSampleGrabber::SetCallback(SampleGrabberCbFunction Callback) {
     CAutoLock lock(&m_Lock);
     m_callback = Callback;
     return NOERROR;

@@ -16,6 +16,31 @@ DEFINE_GUID(CLSID_GrabberSample,
 DEFINE_GUID(IID_IGrabberSample,
 0x6b652fff, 0x11fe, 0x4fce, 0x92, 0xad, 0x02, 0x66, 0xb5, 0xd7, 0xc7, 0x8f);
 
+// We define a callback typedef for this example.  Normally, you would make
+// the SampleGrabber support a COM interface, and in one of its methods you
+// would pass in a pointer to a COM interface used for calling back. See the
+// DirectX documentation for the SampleGrabber for more information.
+typedef HRESULT(*SampleGrabberCbFunction) (IMediaSample* pSample,
+                                           REFERENCE_TIME* StartTime,
+                                           REFERENCE_TIME* StopTime,
+                                           BOOL TypeChanged);
+
+// We define the interface the app can use to program us
+MIDL_INTERFACE("6B652FFF-11FE-4FCE-92AD-0266B5D7C78F")
+IGrabberSample : public IUnknown
+{
+    public:
+        virtual HRESULT STDMETHODCALLTYPE SetAcceptedMediaType(
+            const CMediaType *pType) = 0;
+        virtual HRESULT STDMETHODCALLTYPE GetConnectedMediaType(
+            CMediaType *pType) = 0;
+        virtual HRESULT STDMETHODCALLTYPE SetCallback(
+            SampleGrabberCbFunction Callback) = 0;
+        virtual HRESULT STDMETHODCALLTYPE SetDeliveryBuffer(
+            ALLOCATOR_PROPERTIES props,
+            BYTE *pBuffer) = 0;
+};
+
 class CSampleGrabberInPin;
 class CSampleGrabber;
 
@@ -104,14 +129,15 @@ public:
     STDMETHODIMP GetAllocatorRequirements( ALLOCATOR_PROPERTIES *pProps );
 };
 
-class CSampleGrabber : public CTransInPlaceFilter
+class CSampleGrabber : public CTransInPlaceFilter,
+                       public IGrabberSample
 {
     friend class CSampleGrabberInPin;
     friend class CSampleGrabberAllocator;
 
 protected:
     CMediaType m_mtAccept;
-    CallbackFunction m_callback;
+    SampleGrabberCbFunction m_callback;
     CCritSec m_Lock; // serialize access to our data
 
     BOOL IsReadOnly( ) { return !m_bModifiesData; }
@@ -142,18 +168,10 @@ public:
 
     CSampleGrabber(IUnknown* pOuter, HRESULT* pHr, BOOL ModifiesData);
 
+    // IGrabberSample
     STDMETHODIMP SetAcceptedMediaType( const CMediaType* pmt );
     STDMETHODIMP GetConnectedMediaType( CMediaType* pmt );
-    STDMETHODIMP SetCallback(CallbackFunction Callback );
+    STDMETHODIMP SetCallback(SampleGrabberCbFunction Callback);
     STDMETHODIMP SetDeliveryBuffer(ALLOCATOR_PROPERTIES props, BYTE* m_pBuffer);
 
-    // We define a callback typedef for this example.  Normally, you would make
-    // the SampleGrabber support a COM interface, and in one of its methods you
-    // would pass in a pointer to a COM interface used for calling back. See the
-    // DirectX documentation for the SampleGrabber for more information.
-    typedef HRESULT (*CallbackFunction) (
-            IMediaSample* pSample,
-            REFERENCE_TIME* StartTime,
-            REFERENCE_TIME* StopTime,
-            BOOL TypeChanged );
 };

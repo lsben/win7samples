@@ -1,21 +1,22 @@
 // From https://msdn.microsoft.com/en-us/library/ms867162.aspx "How To Get Data
 // from a Microsoft DirectShow Filter Graph" by Eric Rudolph, Oct. 2003.
 
-//#include "stdafx.h"
+#include "stdafx.h"
 //#include <atlbase.h>
 #include <Windows.h>
 
 #include "qedit.h"         // for CLSID_NullRenderer; also provides
 #include "streams.h"       //     ISampleGrabber but we're rolling out own.
-#include "filters/grabber/grabber.h"
+#include "filters/grabber1/grabber.h"
 #include "common/utils.h"
 #include "common/smartptr.h"
+#include "common/dshowutil.h"
 
 HANDLE gWaitEvent = NULL;  // Signaled in Callback()
 
 // Matches CSampleGrabber::CallbackFunction.
 HRESULT Callback(IMediaSample* pSample, REFERENCE_TIME* StartTime,
-                 REFERENCE_TIME* StopTime, bool typeChanged_ignore) {
+                 REFERENCE_TIME* StopTime, BOOL typeChanged_ignore) {
     // Note: We cannot do anything with this sample until we call
     // GetConnectedMediaType on the filter to find out the format.
     DbgLog((LOG_TRACE, 0, "Callback with sample %lx for time %ld",
@@ -29,12 +30,10 @@ int get_data_test(int argc, char* argv[]) {
 
     // The sample grabber is not in the registry, so create it with 'new'.
     HRESULT hr = S_OK;
-    CSampleGrabber *pSampleGrabber = new CSampleGrabber(NULL, &hr, FALSE);
+    SmartPtr<CSampleGrabber> pSampleGrabber(
+            new CSampleGrabber(NULL, &hr, FALSE));
     CHECK_HR_RETURN(hr);
-    pSampleGrabber->AddRef();
-
-    // Set the callback function of the filter.
-    pSampleGrabber->SetCallback(&Callback);
+    pSampleGrabber->SetCallback(Callback);
 
     // Set up a partially specified media type.
     CMediaType media_type(&MEDIATYPE_Video);
@@ -63,8 +62,8 @@ int get_data_test(int argc, char* argv[]) {
     // Add a source filter to the graph.
     SmartPtr<IBaseFilter> pSourceFilter;
     const wchar_t* kVideoFilePath =
-            L"Z:\Downloads\videos\grb_2.avi";
-    //      L"Z:\Downloads\videos\PredatorDroneMissileStrike.webm";
+            L"Z:\\Downloads\\videos\\grb_2.avi";
+    //      L"Z:\\Downloads\\videos\\PredatorDroneMissileStrike.webm";
     hr = pGraphBuilder->AddSourceFilter(kVideoFilePath, L"Source",
                                         &pSourceFilter);
     CHECK_HR_RETURN(hr);
@@ -97,11 +96,11 @@ int get_data_test(int argc, char* argv[]) {
     // Note: The graph is built, but we do not know the format yet.
     // To find the format, call GetConnectedMediaType. For this example,
     // we just write some information to the debug window.
-    int64_t Duration = 0;
+    REFERENCE_TIME Duration = 0;
     hr = pSeeking->GetDuration(&Duration);
     CHECK_HR_RETURN(hr);
     BOOL Paused = FALSE;
-    long t1 = timeGetTime();
+    long t1_ms = timeGetTime();
 
     for(int i = 0 ; i < 100 ; i++) {
         // Seek the graph.
@@ -121,9 +120,9 @@ int get_data_test(int argc, char* argv[]) {
         WaitForSingleObject(gWaitEvent, INFINITE);
     }
 
-    long t2 = timeGetTime();
-    DbgLog((LOG_TRACE, 0, "Frames per second = %ld", i * 1000/(t2 - t1)));
-    pSampleGrabber->Release();
+    long t2_ms = timeGetTime();
+    long seconds_elapsed = (t2_ms - t1_ms) / 1000;
+    DbgLog((LOG_TRACE, 0, "Frames grabbed per sec = %ld", 100/seconds_elapsed));
     return 0;
 }
 
