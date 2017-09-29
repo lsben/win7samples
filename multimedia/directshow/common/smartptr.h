@@ -102,7 +102,7 @@ public:
                              DWORD dwClsContext = CLSCTX_INPROC_SERVER) {
         return ::CoCreateInstance(
                 clsid, pUnkOuter, dwClsContext, __uuidof(T),
-                reinterpret_cast<PVOID *>(m_ptr));
+                reinterpret_cast<PVOID *>(&m_ptr));
     }
 
     // Templated version of QueryInterface. Q is another interface type.
