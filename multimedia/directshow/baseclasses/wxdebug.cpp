@@ -253,8 +253,7 @@ HRESULT  DbgUniqueProcessName(LPCTSTR inName, LPTSTR outName) {
 /* Called by DbgInitGlobalSettings to setup alternate logging destinations
  */
 
-void WINAPI DbgInitLogTo (
-    HKEY hKey) {
+void WINAPI DbgInitLogTo (HKEY hKey) {
     LONG  lReturn;
     DWORD dwKeyType;
     DWORD dwKeySize;
@@ -270,8 +269,6 @@ void WINAPI DbgInitLogTo (
         (LPBYTE) szFile,            // Returns the field's value
         &dwKeySize);                // Number of bytes transferred
 
-    // create an empty key if it does not already exist
-    //
     if (lReturn != ERROR_SUCCESS || dwKeyType != REG_SZ) {
        dwKeySize = sizeof(TCHAR);
        lReturn = RegSetValueEx(
@@ -284,7 +281,6 @@ void WINAPI DbgInitLogTo (
        }
 
     // if an output-to was specified.  try to open it.
-    //
     if (m_hOutput != INVALID_HANDLE_VALUE) {
        EXECUTE_ASSERT(CloseHandle (m_hOutput));
        m_hOutput = INVALID_HANDLE_VALUE;
@@ -681,7 +677,7 @@ void WINAPI DbgLogInfo(DWORD Type,DWORD Level,__format_string LPCSTR pFormat,...
     va_start(va, pFormat);
 
     (void)StringCchPrintf(szInfo, NUMELMS(szInfo),
-             TEXT("%s(tid %x) %8d : "),
+             TEXT("%s(tid %x) %7dms: "),
              m_ModuleName,
              GetCurrentThreadId(), timeGetTime() - dwTimeOffset);
 

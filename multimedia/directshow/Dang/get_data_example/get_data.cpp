@@ -20,8 +20,9 @@ HRESULT Callback(IMediaSample* pSample, REFERENCE_TIME* StartTime,
                  REFERENCE_TIME* StopTime, BOOL typeChanged_ignore) {
     // Note: We cannot do anything with this sample until we call
     // GetConnectedMediaType on the filter to find out the format.
-    DbgLog((LOG_TRACE, 0, "Callback with sample %lx for time %ld",
-            pSample, long(*StartTime / 10000)));
+    DbgLog((LOG_TRACE, 0, "Callback with sample %lx for StartTime %ld ms, "
+            "StopTime %ld ms", pSample,
+            long(*StartTime / 10000), long(*StopTime / 10000)));
     SetEvent(gWaitEvent);
     return S_FALSE; // Tell the source to stop delivering samples.
 }
@@ -122,9 +123,9 @@ int get_data_test(int argc, char* argv[]) {
     }
 
     long t2_ms = timeGetTime();
-    long seconds_elapsed = (t2_ms - t1_ms) / 1000;
-    DbgLog((LOG_TRACE, 0, "Frames grabbed per sec = %ld",
-            seconds_elapsed > 0 ? 100/seconds_elapsed : -1));
+    long ms_elapsed = t2_ms - t1_ms;
+    DbgLog((LOG_TRACE, 0, "Frames grabbed per sec = %.4f",
+            ms_elapsed > 0 ? 100000.0/ms_elapsed : -1));
     return 0;
 }
 
