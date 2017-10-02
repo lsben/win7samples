@@ -1,16 +1,22 @@
-// mw: This used to be part of the SDK (whichever one, who cares) but not any
-// more. So I had to download it from
+// msw: This library is 'deprecated', and has been for a long time. It used to
+// be part of the win7 (?) SDK but not any more. So I had to download it from
 // https://social.msdn.microsoft.com/Forums/windowsdesktop/en-US/2ab5c212-5824-419d-b5d9-7f5db82f57cd/qedith-missing-in-current-windows-sdk-v70?forum=windowsdirectshowdevelopment
+// It provides one of the headers for the not-deprecated Windows library
+// quartz.dll.
 //
 // It doesn't really belong in directshow/BaseClasses/, it belongs in the
-// SDK. But oh well.
-
-////////////////////////////////////////////////////////////////////////////////
+// SDK. But oh well. Cf. comments on it in the helpful writeup at
+// http://www.infognition.com/blog/2013/accessing_raw_video_in_directshow.html.
+//
+// Not sure why this isn't named sample-grabber.h. But if it's good enough for
+// Microsoft, it's good enough for me.
 
 #ifndef __qedit_h__
 #define __qedit_h__
 
 #pragma once
+
+#include <dshow.h>
 
 interface ISampleGrabberCB :public IUnknown
 {
