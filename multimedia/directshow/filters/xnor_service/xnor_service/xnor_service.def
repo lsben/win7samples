@@ -1,0 +1,12 @@
+; Author: Matthew Weaver <matthew@xnor.ai>
+
+
+LIBRARY     xnor_service.dll
+
+EXPORTS
+            DllMain                 PRIVATE
+            DllGetClassObject       PRIVATE
+            DllCanUnloadNow         PRIVATE
+            DllRegisterServer       PRIVATE
+            DllUnregisterServer     PRIVATE
+

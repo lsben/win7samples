@@ -2,6 +2,6 @@
 ;;; For more information see (info "(emacs) Directory Variables")
 
 ((c++-mode
-  (c-file-style . "maweaver-at-msft")))
+  (c-file-style . "msw/win32")))
 
 
